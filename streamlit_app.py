@@ -120,7 +120,7 @@ elif mode == "📖 Flashcards":
         st.success("🎉 No cards due now! Come back later.")
 
 # ---------------- QUIZZES ----------------
-elif mode == "📝 Quizzes":
+#{elif mode == "📝 Quizzes":
     st.subheader("📝 Korean Quizzes")
     topic = st.text_input("Enter a topic for the quiz:")
 
@@ -158,7 +158,38 @@ elif mode == "📝 Quizzes":
                 save_quiz_result(topic, q["question"], q["options"], q["answer"], choice, correct)
                 log_activity()
         except:
-            st.error("⚠️ Could not parse quiz. Try again.")
+            st.error("⚠️ Could not parse quiz. Try again.")}
+            import json
+import streamlit as st
+from openai import OpenAI
+
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+def generate_quiz(topic):
+    prompt = f"Create 3 multiple-choice Korean quizzes on the topic '{topic}'. \
+    Return JSON in this format: \
+    [{{'question': '...', 'options': ['a','b','c','d'], 'answer': 'a'}}]"
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a quiz generator."},
+                      {"role": "user", "content": prompt}]
+        )
+        raw = response.choices[0].message.content
+        quizzes = json.loads(raw)   # will fail if not valid JSON
+        return quizzes
+    except Exception as e:
+        st.error(f"Quiz generation failed: {e}")
+        # Fallback quiz
+        return [
+            {
+                "question": "What does '학교' mean?",
+                "options": ["School", "Book", "Friend", "Teacher"],
+                "answer": "School"
+            }
+        ]
+
 
 # ---------------- ASSIGNMENTS ----------------
 elif mode == "✍️ Assignments":
