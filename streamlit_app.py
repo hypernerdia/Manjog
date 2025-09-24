@@ -97,42 +97,48 @@ elif mode == "📖 Flashcards":
         if col2.button("❌ I forgot", key=f"no_{card_id}"):
             update_card(card_id, 1, st.session_state.get("time", 0) + 86400)
 
-# ---------------- QUIZZES ----------------
-elif mode == "📝 Quizzes":
-    st.subheader("Take a Quiz")
+# ---------------- QUIZZES ---------------
+import re
 
-    topic = st.text_input("Quiz topic")
-    if st.button("Generate Quiz"):
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Create Korean quizzes as JSON."},
-                    {"role": "user", "content": f"Make 3 multiple-choice quizzes on '{topic}'. "
-                                                "Format: [{'question':'...', 'options':['a','b','c'], 'answer':'...'}]"}
-                ]
-            )
-            raw = response.choices[0].message.content
-            quizzes = json.loads(raw)
-        except Exception as e:
-            st.error(f"⚠️ Quiz generation failed: {e}")
-            quizzes = [
-                {"question": "What does '학교' mean?",
-                 "options": ["School", "Book", "Friend", "Teacher"],
-                 "answer": "School"}
+def generate_quiz(topic):
+    prompt = f"""
+    Create 3 Korean multiple-choice quizzes about "{topic}".
+    Respond ONLY with valid JSON, nothing else.
+    Format:
+    [
+      {{
+        "question": "What does '학교' mean?",
+        "options": ["School", "Teacher", "Book", "Friend"],
+        "answer": "School"
+      }}
+    ]
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a JSON-only quiz generator."},
+                {"role": "user", "content": prompt}
             ]
+        )
+        raw = response.choices[0].message.content.strip()
 
-        for i, q in enumerate(quizzes):
-            st.write(f"**Q{i+1}: {q['question']}**")
-            choice = st.radio("Choose:", q["options"], key=f"quiz_{i}")
-            if st.button("Submit", key=f"submit_{i}"):
-                correct = (choice == q["answer"])
-                if correct:
-                    st.success("✅ Correct!")
-                    add_xp(15)
-                else:
-                    st.error(f"❌ Wrong. Correct answer: {q['answer']}")
-                save_quiz_result(topic, q["question"], q["options"], q["answer"], choice, correct)
+        # Extract JSON only (removes text before/after)
+        match = re.search(r"\[.*\]", raw, re.S)
+        if match:
+            raw = match.group(0)
+
+        quizzes = json.loads(raw)
+        return quizzes
+
+    except Exception as e:
+        st.error(f"⚠️ Quiz generation failed: {e}")
+        return [
+            {"question": "What does '학교' mean?",
+             "options": ["School", "Book", "Friend", "Teacher"],
+             "answer": "School"}
+        ]
 
 # ---------------- ASSIGNMENTS ----------------
 elif mode == "✍️ Assignments":
