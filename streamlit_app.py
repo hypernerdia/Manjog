@@ -120,46 +120,7 @@ elif mode == "📖 Flashcards":
         st.success("🎉 No cards due now! Come back later.")
 
 # ---------------- QUIZZES ----------------
-#{elif mode == "📝 Quizzes":
-    st.subheader("📝 Korean Quizzes")
-    topic = st.text_input("Enter a topic for the quiz:")
-
-    if st.button("Start Quiz"):
-        quiz_prompt = f"""
-        Create a Korean multiple-choice quiz about {topic}.
-        Return JSON:
-        [
-          {{
-            "question": "What does '학교' mean?",
-            "options": ["School","Teacher","Book","Friend"],
-            "answer": "School"
-          }}
-        ]
-        """
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role":"system","content":"You are a Korean teacher. Return ONLY JSON."},
-                {"role":"user","content":quiz_prompt}
-            ]
-        )
-        try:
-            quiz = json.loads(response.choices[0].message.content)
-            q = quiz[0]
-            st.write(f"**Q:** {q['question']}")
-            choice = st.radio("Choose one:", q["options"])
-            if st.button("Submit Answer"):
-                correct = choice == q["answer"]
-                if correct:
-                    st.success("✅ Correct!")
-                    add_xp(10)
-                else:
-                    st.error(f"❌ Wrong. Correct answer: {q['answer']}")
-                save_quiz_result(topic, q["question"], q["options"], q["answer"], choice, correct)
-                log_activity()
-        except:
-            st.error("⚠️ Could not parse quiz. Try again.")}
-            import json
+import json
 import streamlit as st
 from openai import OpenAI
 
