@@ -1,5 +1,5 @@
 import streamlit as st
-import json, time
+import json
 import matplotlib.pyplot as plt
 from openai import OpenAI
 from db import (
@@ -10,238 +10,185 @@ from db import (
     add_xp, get_xp
 )
 
-# ---------------- INIT ----------------
-st.set_page_config(page_title="Korean Learning Bot 🇰🇷", layout="wide")
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# ---------------- SETUP ----------------
+st.set_page_config(page_title="🇰🇷 Korean Learning Bot", layout="wide")
 init_db()
 
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("🇰🇷 Korean Learning Bot")
-mode = st.sidebar.selectbox(
-    "Choose Mode:",
-    ["☁️ Chatbot", "📖 Flashcards", "📝 Quizzes", "✍️ Assignments", "📊 Dashboard"]
-)
+# OpenAI client
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+st.title("🇰🇷 Korean Learning Bot")
+
+# Sidebar menu
+mode = st.sidebar.radio("Choose a mode:", [
+    "🤖 Chatbot",
+    "📖 Flashcards",
+    "📝 Quizzes",
+    "✍️ Assignments",
+    "📊 Dashboard"
+])
 
 # ---------------- CHATBOT ----------------
-if mode == "☁️ Chatbot":
-    st.subheader("☁️ Practice Korean with AI")
+if mode == "🤖 Chatbot":
+    st.subheader("Practice Korean with the AI Tutor")
+
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    user_input = st.text_input("Say something in Korean (or English):")
-    if st.button("Send"):
-        if user_input:
-            st.session_state.chat_history.append(("You", user_input))
+    for role, msg in st.session_state.chat_history:
+        st.chat_message(role).markdown(msg)
+
+    if prompt := st.chat_input("Write in Korean or English..."):
+        st.chat_message("user").markdown(prompt)
+        st.session_state.chat_history.append(("user", prompt))
+
+        try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role":"system","content":"You are a helpful Korean teacher. Correct mistakes and encourage learning."},
-                    {"role":"user","content":user_input}
+                    {"role": "system", "content": "You are a helpful Korean tutor."},
+                    *[{"role": role, "content": msg} for role, msg in st.session_state.chat_history]
                 ]
             )
-            bot_reply = response.choices[0].message.content
-            st.session_state.chat_history.append(("Bot", bot_reply))
-            log_activity()
-            add_xp(5)
+            reply = response.choices[0].message.content
+        except Exception as e:
+            reply = f"⚠️ Error: {e}"
 
-    for role, msg in st.session_state.chat_history:
-        if role == "You":
-            st.write(f"🧑 **You:** {msg}")
-        else:
-            st.write(f"☁️ **ManjogBot:** {msg}")
+        st.chat_message("assistant").markdown(reply)
+        st.session_state.chat_history.append(("assistant", reply))
+
+        log_activity()
+        add_xp(5)
 
 # ---------------- FLASHCARDS ----------------
 elif mode == "📖 Flashcards":
-    st.subheader("📖 Flashcards with Spaced Repetition")
-    topic = st.text_input("Enter a topic (e.g., food, travel, verbs):")
+    st.subheader("Spaced Repetition Flashcards")
 
+    topic = st.text_input("Enter a topic (e.g., Food, Travel, Verbs)")
     if st.button("Generate Flashcards"):
-        flash_prompt = f"""
-        Create 5 Korean flashcards about {topic}.
-        Return them in JSON like this:
-        [
-          {{"korean":"가다","english":"to go","example":"저는 학교에 가요."}},
-          {{"korean":"먹다","english":"to eat","example":"나는 밥을 먹어요."}}
-        ]
-        """
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role":"system","content":"You are a Korean teacher. Return ONLY valid JSON."},
-                {"role":"user","content":flash_prompt}
-            ]
-        )
         try:
-            cards = json.loads(response.choices[0].message.content)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Create Korean flashcards as JSON."},
+                    {"role": "user", "content": f"Generate 5 flashcards for topic '{topic}' in JSON: "
+                                                "[{{'korean':'...', 'english':'...', 'example':'...'}}]"}
+                ]
+            )
+            raw = response.choices[0].message.content
+            cards = json.loads(raw)
             add_flashcards(topic, cards)
-            st.success("✅ Flashcards saved! Refresh to review.")
-            log_activity()
-            add_xp(20)
-        except:
-            st.error("⚠️ Could not parse flashcards. Try again.")
+            st.success("✅ Flashcards added!")
+        except Exception as e:
+            st.error(f"⚠️ Could not generate flashcards: {e}")
 
-    due_cards = get_due_cards()
-    if due_cards:
-        card = due_cards[0]
-        card_id, korean, english, example, interval, next_review = card
-        st.write(f"**Front (Korean):** {korean}")
+    st.markdown("### Review Due Flashcards")
+    cards = get_due_cards()
+    for card in cards:
+        card_id, korean, english, example, interval, _ = card
+        st.write(f"**{korean}** — {example}")
+        if st.button("Show Answer", key=f"ans_{card_id}"):
+            st.info(f"👉 {english}")
 
-        if st.button("Show Answer", key=f"show{card_id}"):
-            st.info(f"**English:** {english}")
-            st.write(f"**Example:** {example}")
-
-            st.write("👉 How well did you know this?")
-            col1, col2, col3 = st.columns(3)
-
-            def update(difficulty):
-                now = time.time()
-                if difficulty == "easy":
-                    new_interval = interval * 2
-                elif difficulty == "hard":
-                    new_interval = max(1, interval // 2)
-                else:
-                    new_interval = 1
-                new_review = now + new_interval * 60
-                update_card(card_id, new_interval, new_review)
-                log_activity()
-                add_xp(5)
-                st.experimental_rerun()
-
-            with col1:
-                if st.button("❌ Again"):
-                    update("again")
-            with col2:
-                if st.button("🤔 Hard"):
-                    update("hard")
-            with col3:
-                if st.button("✅ Easy"):
-                    update("easy")
-    else:
-        st.success("🎉 No cards due now! Come back later.")
+        col1, col2 = st.columns(2)
+        if col1.button("✅ I knew it", key=f"yes_{card_id}"):
+            update_card(card_id, interval * 2, st.session_state.get("time", 0) + interval * 86400)
+            add_xp(10)
+        if col2.button("❌ I forgot", key=f"no_{card_id}"):
+            update_card(card_id, 1, st.session_state.get("time", 0) + 86400)
 
 # ---------------- QUIZZES ----------------
-import json
-import streamlit as st
-from openai import OpenAI
+elif mode == "📝 Quizzes":
+    st.subheader("Take a Quiz")
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    topic = st.text_input("Quiz topic")
+    if st.button("Generate Quiz"):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Create Korean quizzes as JSON."},
+                    {"role": "user", "content": f"Make 3 multiple-choice quizzes on '{topic}'. "
+                                                "Format: [{'question':'...', 'options':['a','b','c'], 'answer':'...'}]"}
+                ]
+            )
+            raw = response.choices[0].message.content
+            quizzes = json.loads(raw)
+        except Exception as e:
+            st.error(f"⚠️ Quiz generation failed: {e}")
+            quizzes = [
+                {"question": "What does '학교' mean?",
+                 "options": ["School", "Book", "Friend", "Teacher"],
+                 "answer": "School"}
+            ]
 
-def generate_quiz(topic):
-    prompt = f"Create 3 multiple-choice Korean quizzes on the topic '{topic}'. \
-    Return JSON in this format: \
-    [{{'question': '...', 'options': ['a','b','c','d'], 'answer': 'a'}}]"
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are a quiz generator."},
-                      {"role": "user", "content": prompt}]
-        )
-        raw = response.choices[0].message.content
-        quizzes = json.loads(raw)   # will fail if not valid JSON
-        return quizzes
-    except Exception as e:
-        st.error(f"Quiz generation failed: {e}")
-        # Fallback quiz
-        return [
-            {
-                "question": "What does '학교' mean?",
-                "options": ["School", "Book", "Friend", "Teacher"],
-                "answer": "School"
-            }
-        ]
-
+        for i, q in enumerate(quizzes):
+            st.write(f"**Q{i+1}: {q['question']}**")
+            choice = st.radio("Choose:", q["options"], key=f"quiz_{i}")
+            if st.button("Submit", key=f"submit_{i}"):
+                correct = (choice == q["answer"])
+                if correct:
+                    st.success("✅ Correct!")
+                    add_xp(15)
+                else:
+                    st.error(f"❌ Wrong. Correct answer: {q['answer']}")
+                save_quiz_result(topic, q["question"], q["options"], q["answer"], choice, correct)
 
 # ---------------- ASSIGNMENTS ----------------
 elif mode == "✍️ Assignments":
-    st.subheader("✍️ Korean Writing Assignments")
-    topic = st.text_input("Enter a topic (e.g., hobbies, travel, school):")
+    st.subheader("Assignments")
 
-    if st.button("Get Assignment"):
-        assign_prompt = f"Create a short Korean writing assignment about {topic}."
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role":"user","content":assign_prompt}]
-        )
-        task = response.choices[0].message.content
-        st.session_state["task"] = task
-        st.write(f"**Assignment:** {task}")
+    topic = st.text_input("Assignment topic")
+    task = st.text_area("Enter your writing prompt (e.g., 'Write 3 sentences about your family.')")
 
-    if "task" in st.session_state:
-        user_response = st.text_area("Write your answer in Korean:")
-        if st.button("Submit Assignment"):
-            feedback_prompt = f"Student wrote: {user_response}\n\nGive constructive feedback in English + corrections."
+    if st.button("Get Feedback"):
+        try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role":"user","content":feedback_prompt}]
+                messages=[
+                    {"role": "system", "content": "You are a Korean teacher. Give constructive feedback."},
+                    {"role": "user", "content": task}
+                ]
             )
             feedback = response.choices[0].message.content
-            add_assignment(topic, st.session_state["task"], user_response, feedback)
-            st.success("✅ Feedback received:")
-            st.write(feedback)
-            log_activity()
+            st.info(feedback)
+            add_assignment(topic, task, task, feedback)
             add_xp(20)
+        except Exception as e:
+            st.error(f"⚠️ Could not get feedback: {e}")
+
+    st.markdown("### Assignment History")
+    for row in get_assignment_history():
+        t, q, resp, fb, ts = row
+        st.write(f"**{t}** — {q}")
+        st.write(f"✍️ Your response: {resp}")
+        st.write(f"📌 Feedback: {fb}")
+        st.markdown("---")
 
 # ---------------- DASHBOARD ----------------
 elif mode == "📊 Dashboard":
-    st.subheader("📊 Your Learning Progress")
+    st.subheader("Your Progress Dashboard")
 
-    # --- XP & Levels ---
-    st.write("### 🏆 XP & Levels")
-    points, level, xp_into_level = get_xp()
-    st.write(f"- Total XP: **{points}**")
-    st.write(f"- Level: **{level}**")
-    st.progress(xp_into_level / 100)
-
-    # --- Streaks ---
-    st.write("### 🔥 Study Streak")
-    current, longest = get_streaks()
-    st.write(f"- Current streak: **{current} days**")
-    st.write(f"- Longest streak: **{longest} days**")
-    if current > 0:
-        st.success(f"🔥 You're on a {current}-day streak!")
-    else:
-        st.warning("⚠️ No study today yet. Do one activity to start your streak.")
-
-    # --- Flashcards Stats ---
-    st.write("### 📖 Flashcards")
     total, due, interval_data = get_flashcard_stats()
-    st.write(f"- Total cards: {total}")
-    st.write(f"- Due now: {due}")
+    st.metric("📖 Total Flashcards", total)
+    st.metric("⏰ Due for Review", due)
+
+    total_q, correct_q = get_quiz_accuracy()
+    st.metric("📝 Quizzes Taken", total_q)
+    st.metric("✅ Correct Answers", correct_q)
+
+    current_streak, longest_streak = get_streaks()
+    st.metric("🔥 Current Streak", current_streak)
+    st.metric("🏆 Longest Streak", longest_streak)
+
+    points, level, xp_into_level = get_xp()
+    st.metric("⭐ XP Points", points)
+    st.metric("🎯 Level", level)
+
+    st.markdown("### Flashcard Progress")
     if interval_data:
-        labels = [str(iv[0]) for iv in interval_data]
-        counts = [iv[1] for iv in interval_data]
+        labels = [f"Interval {iv}" for iv, _ in interval_data]
+        values = [count for _, count in interval_data]
         fig, ax = plt.subplots()
-        ax.bar(labels, counts)
-        ax.set_xlabel("Interval (minutes, demo)")
-        ax.set_ylabel("Number of Cards")
-        ax.set_title("Flashcards by Interval")
+        ax.bar(labels, values)
         st.pyplot(fig)
-
-    # --- Quiz Stats ---
-    st.write("### 📝 Quizzes")
-    total, correct = get_quiz_accuracy()
-    if total > 0:
-        accuracy = (correct / total) * 100
-        st.write(f"- Total questions answered: {total}")
-        st.write(f"- Correct: {correct}")
-        st.write(f"- Accuracy: {accuracy:.2f}%")
-        fig, ax = plt.subplots()
-        ax.bar(["Correct","Wrong"], [correct, total-correct], color=["green","red"])
-        st.pyplot(fig)
-    else:
-        st.info("No quizzes taken yet.")
-
-    # --- Assignment History ---
-    st.write("### ✍️ Assignments")
-    assignments = get_assignment_history()
-    if assignments:
-        st.write(f"- Total assignments submitted: {len(assignments)}")
-        for a in assignments[:5]:
-            t, task, resp, fb, ts = a
-            st.write(f"- **{t}** | Task: {task}")
-            st.write(f"  → Your Answer: {resp}")
-            st.write(f"  → Feedback: {fb}")
-            st.write("---")
-    else:
-        st.info("No assignments submitted yet.")
