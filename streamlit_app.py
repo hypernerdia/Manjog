@@ -2,7 +2,8 @@ import streamlit as st
 import openai
 
 # --- API KEY ---
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # --- Session State Initialization ---
 if "progress" not in st.session_state:
@@ -39,12 +40,12 @@ if "assignment_topic" not in st.session_state:
 def generate_quiz(topic):
     prompt = f"Create a 5-question multiple-choice quiz about {topic} in JSON with keys: question, options, answer."
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        quiz_json = response["choices"][0]["message"]["content"]
+        quiz_json = response.choices[0].message.content
         import json
         return json.loads(quiz_json)
     except Exception as e:
@@ -55,12 +56,12 @@ def generate_quiz(topic):
 def generate_flashcards(topic):
     prompt = f"Create 5 Korean flashcards about {topic}. Format: JSON with 'front' and 'back'."
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        cards_json = response["choices"][0]["message"]["content"]
+        cards_json = response.choices[0].message.content
         import json
         return json.loads(cards_json)
     except Exception as e:
@@ -71,12 +72,12 @@ def generate_flashcards(topic):
 def generate_assignment(topic):
     prompt = f"Create a short Korean language assignment about {topic}. Return 3 tasks in JSON list."
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        assignment_json = response["choices"][0]["message"]["content"]
+        assignment_json = response.choices[0].message.content
         import json
         return json.loads(assignment_json)
     except Exception as e:
@@ -96,7 +97,7 @@ if mode == "🤖 Chatbot":
     st.header("🤖 Chat with AI")
     user_input = st.text_input("Ask something in Korean or about Korean:")
     if st.button("Send") and user_input:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": user_input}]
         )
