@@ -1,8 +1,8 @@
 import streamlit as st
-import openai
-
-# --- API KEY ---
 from openai import OpenAI
+import json
+
+# --- OpenAI client ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # --- Session State Initialization ---
@@ -46,7 +46,6 @@ def generate_quiz(topic):
             temperature=0.7
         )
         quiz_json = response.choices[0].message.content
-        import json
         return json.loads(quiz_json)
     except Exception as e:
         st.error(f"⚠️ Quiz generation failed: {e}")
@@ -62,7 +61,6 @@ def generate_flashcards(topic):
             temperature=0.7
         )
         cards_json = response.choices[0].message.content
-        import json
         return json.loads(cards_json)
     except Exception as e:
         st.error(f"⚠️ Flashcard generation failed: {e}")
@@ -78,7 +76,6 @@ def generate_assignment(topic):
             temperature=0.7
         )
         assignment_json = response.choices[0].message.content
-        import json
         return json.loads(assignment_json)
     except Exception as e:
         st.error(f"⚠️ Assignment generation failed: {e}")
@@ -124,12 +121,12 @@ elif mode == "📚 Quizzes":
         st.session_state.answers = {}
         st.session_state.quiz_topic = topic
 
-    if "quizzes" in st.session_state and st.session_state.quizzes:
+    if st.session_state.quizzes:
         st.write("### Your Quiz")
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}: {q['question']}**")
             st.radio(
-                "Select answer",
+                f"Select answer for Q{i}",
                 q["options"],
                 key=f"quiz_{i}",
                 on_change=lambda i=i: st.session_state.answers.update(
@@ -150,7 +147,7 @@ elif mode == "📚 Quizzes":
             # Update progress
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
-            st.session_state.progress["xp"] += correct_count * 10  # 10 XP each correct
+            st.session_state.progress["xp"] += correct_count * 10
 
 elif mode == "✍️ Assignments":
     st.header("✍️ Assignments")
@@ -162,7 +159,7 @@ elif mode == "✍️ Assignments":
 
         # Update progress
         st.session_state.progress["assignments_done"] += 1
-        st.session_state.progress["xp"] += 20  # XP for doing assignment
+        st.session_state.progress["xp"] += 20
 
     if st.session_state.assignments:
         st.write("### Your Assignment")
