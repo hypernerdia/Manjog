@@ -11,16 +11,12 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 # ------------------------------
 
 def generate_flashcards(topic):
-    """Generate flashcards in JSON format"""
     prompt = f"""
     Create 3 Korean flashcards about "{topic}".
     Respond ONLY with valid JSON, nothing else.
     Format:
     [
-      {{
-        "front": "학교",
-        "back": "School"
-      }}
+      {{"front": "학교", "back": "School"}}
     ]
     """
     try:
@@ -35,15 +31,13 @@ def generate_flashcards(topic):
         match = re.search(r"\[.*\]", raw, re.S)
         if match:
             raw = match.group(0)
-        cards = json.loads(raw)
-        return cards
+        return json.loads(raw)
     except Exception as e:
         st.error(f"⚠️ Flashcard generation failed: {e}")
         return [{"front": "학교", "back": "School"}]
 
 
 def generate_quiz(topic):
-    """Generate quizzes in JSON format"""
     prompt = f"""
     Create 3 Korean multiple-choice quizzes about "{topic}".
     Respond ONLY with valid JSON, nothing else.
@@ -68,8 +62,7 @@ def generate_quiz(topic):
         match = re.search(r"\[.*\]", raw, re.S)
         if match:
             raw = match.group(0)
-        quizzes = json.loads(raw)
-        return quizzes
+        return json.loads(raw)
     except Exception as e:
         st.error(f"⚠️ Quiz generation failed: {e}")
         return [
@@ -82,11 +75,7 @@ def generate_quiz(topic):
 
 
 def generate_assignment(topic):
-    """Generate assignment tasks"""
-    prompt = f"""
-    Create 2 Korean learning assignments about "{topic}".
-    Keep them short and clear. Respond as plain text.
-    """
+    prompt = f"Create 2 Korean learning assignments about '{topic}'."
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -96,6 +85,30 @@ def generate_assignment(topic):
     except Exception as e:
         st.error(f"⚠️ Assignment generation failed: {e}")
         return "Write 5 sentences using the word '학교'."
+
+# ------------------------------
+# Initialize session state
+# ------------------------------
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+if "flashcards" not in st.session_state:
+    st.session_state.flashcards = []
+if "flashcards_topic" not in st.session_state:
+    st.session_state.flashcards_topic = ""
+
+if "quizzes" not in st.session_state:
+    st.session_state.quizzes = []
+if "quiz_topic" not in st.session_state:
+    st.session_state.quiz_topic = ""
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
+
+if "assignments" not in st.session_state:
+    st.session_state.assignments = ""
+if "assignment_topic" not in st.session_state:
+    st.session_state.assignment_topic = ""
 
 # ------------------------------
 # Streamlit UI
@@ -114,15 +127,23 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
     user_input = st.text_input("Ask something in Korean or English:")
-    if user_input:
+
+    if st.button("Send") and user_input:
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful Korean learning assistant."},
-                {"role": "user", "content": user_input}
-            ]
+            messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
         )
-        st.success(response.choices[0].message.content)
+        bot_reply = response.choices[0].message.content
+        st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+
+    # Show conversation
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.write(f"🧑: {msg['content']}")
+        else:
+            st.success(f"🤖: {msg['content']}")
 
 # ------------------------------
 # Mode: Flashcards
@@ -130,9 +151,14 @@ if mode == "🤖 Chatbot":
 elif mode == "📖 Flashcards":
     st.header("📖 Flashcards")
     topic = st.text_input("Enter a topic for flashcards:")
+
     if st.button("Generate Flashcards") and topic:
-        cards = generate_flashcards(topic)
-        for i, card in enumerate(cards, 1):
+        st.session_state.flashcards = generate_flashcards(topic)
+        st.session_state.flashcards_topic = topic
+
+    if st.session_state.flashcards:
+        st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
+        for i, card in enumerate(st.session_state.flashcards, 1):
             st.write(f"**Card {i}**")
             st.info(f"Front: {card['front']}")
             st.success(f"Back: {card['back']}")
@@ -143,16 +169,31 @@ elif mode == "📖 Flashcards":
 elif mode == "📝 Quizzes":
     st.header("📝 Quizzes")
     topic = st.text_input("Enter a topic for quizzes:")
+
     if st.button("Generate Quiz") and topic:
-        quizzes = generate_quiz(topic)
-        for i, q in enumerate(quizzes, 1):
+        st.session_state.quizzes = generate_quiz(topic)
+        st.session_state.quiz_topic = topic
+        st.session_state.answers = {}
+
+    if st.session_state.quizzes:
+        st.write(f"### Quiz on: {st.session_state.quiz_topic}")
+        for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
-            choice = st.radio("Choose an answer:", q["options"], key=f"quiz_{i}")
-            if st.button(f"Check Answer {i}"):
-                if choice == q["answer"]:
-                    st.success("✅ Correct!")
+
+            selected = st.radio(
+                f"Choose an answer for Q{i}:",
+                q["options"],
+                key=f"quiz_{i}"
+            )
+            st.session_state.answers[i] = selected
+
+        if st.button("Check Answers"):
+            for i, q in enumerate(st.session_state.quizzes, 1):
+                user_ans = st.session_state.answers.get(i, None)
+                if user_ans == q["answer"]:
+                    st.success(f"Q{i}: ✅ Correct!")
                 else:
-                    st.error(f"❌ Wrong! Correct answer: {q['answer']}")
+                    st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
 
 # ------------------------------
 # Mode: Assignments
@@ -160,10 +201,14 @@ elif mode == "📝 Quizzes":
 elif mode == "✍️ Assignments":
     st.header("✍️ Assignments")
     topic = st.text_input("Enter a topic for assignments:")
+
     if st.button("Generate Assignment") and topic:
-        tasks = generate_assignment(topic)
-        st.write("### Your Assignments:")
-        st.info(tasks)
+        st.session_state.assignments = generate_assignment(topic)
+        st.session_state.assignment_topic = topic
+
+    if st.session_state.assignments:
+        st.write(f"### Assignments on: {st.session_state.assignment_topic}")
+        st.info(st.session_state.assignments)
 
 # ------------------------------
 # Mode: Dashboard
@@ -171,3 +216,9 @@ elif mode == "✍️ Assignments":
 elif mode == "📊 Dashboard":
     st.header("📊 Dashboard")
     st.write("📈 Learning progress will be displayed here (to be implemented).")
+    if st.session_state.quiz_topic:
+        st.write(f"- Last quiz topic: {st.session_state.quiz_topic}")
+    if st.session_state.flashcards_topic:
+        st.write(f"- Last flashcards topic: {st.session_state.flashcards_topic}")
+    if st.session_state.assignment_topic:
+        st.write(f"- Last assignment topic: {st.session_state.assignment_topic}")
