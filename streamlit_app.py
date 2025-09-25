@@ -1,115 +1,10 @@
 import streamlit as st
-import json
-import re
-from openai import OpenAI
+import openai
 
-# Initialize OpenAI client
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# --- API KEY ---
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# ------------------------------
-# Helper functions
-# ------------------------------
-
-def generate_flashcards(topic):
-    prompt = f"""
-    Create 3 Korean flashcards about "{topic}".
-    Respond ONLY with valid JSON, nothing else.
-    Format:
-    [
-      {{"front": "학교", "back": "School"}}
-    ]
-    """
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a JSON-only flashcard generator."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        raw = response.choices[0].message.content.strip()
-        match = re.search(r"\[.*\]", raw, re.S)
-        if match:
-            raw = match.group(0)
-        return json.loads(raw)
-    except Exception as e:
-        st.error(f"⚠️ Flashcard generation failed: {e}")
-        return [{"front": "학교", "back": "School"}]
-
-
-def generate_quiz(topic):
-    prompt = f"""
-    Create 3 Korean multiple-choice quizzes about "{topic}".
-    Respond ONLY with valid JSON, nothing else.
-    Format:
-    [
-      {{
-        "question": "What does '학교' mean?",
-        "options": ["School", "Teacher", "Book", "Friend"],
-        "answer": "School"
-      }}
-    ]
-    """
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a JSON-only quiz generator."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        raw = response.choices[0].message.content.strip()
-        match = re.search(r"\[.*\]", raw, re.S)
-        if match:
-            raw = match.group(0)
-        return json.loads(raw)
-    except Exception as e:
-        st.error(f"⚠️ Quiz generation failed: {e}")
-        return [
-            {
-                "question": "What does '학교' mean?",
-                "options": ["School", "Book", "Friend", "Teacher"],
-                "answer": "School"
-            }
-        ]
-
-
-def generate_assignment(topic):
-    prompt = f"Create 2 Korean learning assignments about '{topic}'."
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        st.error(f"⚠️ Assignment generation failed: {e}")
-        return "Write 5 sentences using the word '학교'."
-
-# ------------------------------
-# Initialize session state
-# ------------------------------
-
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-if "flashcards" not in st.session_state:
-    st.session_state.flashcards = []
-if "flashcards_topic" not in st.session_state:
-    st.session_state.flashcards_topic = ""
-
-if "quizzes" not in st.session_state:
-    st.session_state.quizzes = []
-if "quiz_topic" not in st.session_state:
-    st.session_state.quiz_topic = ""
-if "answers" not in st.session_state:
-    st.session_state.answers = {}
-
-if "assignments" not in st.session_state:
-    st.session_state.assignments = ""
-if "assignment_topic" not in st.session_state:
-    st.session_state.assignment_topic = ""
-
+# --- Session State Initialization ---
 if "progress" not in st.session_state:
     st.session_state.progress = {
         "xp": 0,
@@ -118,121 +13,176 @@ if "progress" not in st.session_state:
         "assignments_done": 0
     }
 
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
 
-# ------------------------------
-# Streamlit UI
-# ------------------------------
+if "quizzes" not in st.session_state:
+    st.session_state.quizzes = []
 
-st.set_page_config(page_title="Korean Learning Chatbot", page_icon="🇰🇷", layout="wide")
+if "flashcards" not in st.session_state:
+    st.session_state.flashcards = []
 
-st.sidebar.title("📚 Korean Learning Chatbot")
+if "assignments" not in st.session_state:
+    st.session_state.assignments = []
+
+if "quiz_topic" not in st.session_state:
+    st.session_state.quiz_topic = ""
+
+if "flashcards_topic" not in st.session_state:
+    st.session_state.flashcards_topic = ""
+
+if "assignment_topic" not in st.session_state:
+    st.session_state.assignment_topic = ""
+
+
+# --- Helper Functions ---
+def generate_quiz(topic):
+    prompt = f"Create a 5-question multiple-choice quiz about {topic} in JSON with keys: question, options, answer."
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        quiz_json = response["choices"][0]["message"]["content"]
+        import json
+        return json.loads(quiz_json)
+    except Exception as e:
+        st.error(f"⚠️ Quiz generation failed: {e}")
+        return []
+
+
+def generate_flashcards(topic):
+    prompt = f"Create 5 Korean flashcards about {topic}. Format: JSON with 'front' and 'back'."
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        cards_json = response["choices"][0]["message"]["content"]
+        import json
+        return json.loads(cards_json)
+    except Exception as e:
+        st.error(f"⚠️ Flashcard generation failed: {e}")
+        return []
+
+
+def generate_assignment(topic):
+    prompt = f"Create a short Korean language assignment about {topic}. Return 3 tasks in JSON list."
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        assignment_json = response["choices"][0]["message"]["content"]
+        import json
+        return json.loads(assignment_json)
+    except Exception as e:
+        st.error(f"⚠️ Assignment generation failed: {e}")
+        return []
+
+
+# --- Streamlit Sidebar ---
+st.sidebar.title("📚 Korean Learning App")
 mode = st.sidebar.radio("Choose a mode:", [
-    "🤖 Chatbot", "📖 Flashcards", "📝 Quizzes", "✍️ Assignments", "📊 Dashboard"
+    "🤖 Chatbot", "📖 Flashcards", "📚 Quizzes", "✍️ Assignments", "📊 Dashboard"
 ])
 
-# ------------------------------
-# Mode: Chatbot
-# ------------------------------
+
+# --- Modes ---
 if mode == "🤖 Chatbot":
-    st.header("🤖 Chatbot")
-    user_input = st.text_input("Ask something in Korean or English:")
-
+    st.header("🤖 Chat with AI")
+    user_input = st.text_input("Ask something in Korean or about Korean:")
     if st.button("Send") and user_input:
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
-            messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+            messages=[{"role": "user", "content": user_input}]
         )
-        bot_reply = response.choices[0].message.content
-        st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+        st.write("**Bot:**", response["choices"][0]["message"]["content"])
 
-    # Show conversation
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.write(f"🧑: {msg['content']}")
-        else:
-            st.success(f"🤖: {msg['content']}")
-
-# ------------------------------
-# Mode: Flashcards
-# ------------------------------
 elif mode == "📖 Flashcards":
     st.header("📖 Flashcards")
     topic = st.text_input("Enter a topic for flashcards:")
-
     if st.button("Generate Flashcards") and topic:
         st.session_state.flashcards = generate_flashcards(topic)
         st.session_state.flashcards_topic = topic
 
     if st.session_state.flashcards:
-        st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
         for i, card in enumerate(st.session_state.flashcards, 1):
-            st.write(f"**Card {i}**")
-            st.info(f"Front: {card['front']}")
-            st.success(f"Back: {card['back']}")
+            with st.expander(f"Card {i}: {card['front']}"):
+                st.write(card["back"])
 
-# ------------------------------
-# Mode: Quizzes
-# ------------------------------
-elif mode == "📝 Quizzes":
-    st.header("📝 Quizzes")
-    topic = st.text_input("Enter a topic for quizzes:")
+elif mode == "📚 Quizzes":
+    st.header("📚 Quizzes")
 
+    topic = st.text_input("Enter a topic for the quiz:")
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
-        st.session_state.quiz_topic = topic
         st.session_state.answers = {}
+        st.session_state.quiz_topic = topic
 
-    if st.session_state.quizzes:
-        st.write(f"### Quiz on: {st.session_state.quiz_topic}")
+    if "quizzes" in st.session_state and st.session_state.quizzes:
+        st.write("### Your Quiz")
         for i, q in enumerate(st.session_state.quizzes, 1):
-            st.write(f"**Q{i}. {q['question']}**")
-
-            selected = st.radio(
-                f"Choose an answer for Q{i}:",
+            st.write(f"**Q{i}: {q['question']}**")
+            st.radio(
+                "Select answer",
                 q["options"],
-                key=f"quiz_{i}"
+                key=f"quiz_{i}",
+                on_change=lambda i=i: st.session_state.answers.update(
+                    {i: st.session_state[f"quiz_{i}"]}
+                )
             )
-            st.session_state.answers[i] = selected
 
-    if st.button("Check Answers"):
-        correct_count = 0
-        for i, q in enumerate(st.session_state.quizzes, 1):
-            user_ans = st.session_state.answers.get(i, None)
-            if user_ans == q["answer"]:
-                st.success(f"Q{i}: ✅ Correct!")
-                correct_count += 1
-            else:
-                st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
+        if st.button("Check Answers"):
+            correct_count = 0
+            for i, q in enumerate(st.session_state.quizzes, 1):
+                user_ans = st.session_state.answers.get(i, None)
+                if user_ans == q["answer"]:
+                    st.success(f"Q{i}: ✅ Correct!")
+                    correct_count += 1
+                else:
+                    st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
 
-    # Update progress
-    st.session_state.progress["quizzes_taken"] += 1
-    st.session_state.progress["correct_answers"] += correct_count
-    st.session_state.progress["xp"] += correct_count * 10  # 10 XP per correct
+            # Update progress
+            st.session_state.progress["quizzes_taken"] += 1
+            st.session_state.progress["correct_answers"] += correct_count
+            st.session_state.progress["xp"] += correct_count * 10  # 10 XP each correct
 
-
-# ------------------------------
-# Mode: Assignments
-# ------------------------------
 elif mode == "✍️ Assignments":
     st.header("✍️ Assignments")
-    topic = st.text_input("Enter a topic for assignments:")
 
+    topic = st.text_input("Enter a topic for assignment:")
     if st.button("Generate Assignment") and topic:
         st.session_state.assignments = generate_assignment(topic)
         st.session_state.assignment_topic = topic
 
-    if st.session_state.assignments:
-        st.write(f"### Assignments on: {st.session_state.assignment_topic}")
-        st.info(st.session_state.assignments)
+        # Update progress
+        st.session_state.progress["assignments_done"] += 1
+        st.session_state.progress["xp"] += 20  # XP for doing assignment
 
-# ------------------------------
-# Mode: Dashboard
-# ------------------------------
+    if st.session_state.assignments:
+        st.write("### Your Assignment")
+        for i, task in enumerate(st.session_state.assignments, 1):
+            st.write(f"**Task {i}:** {task}")
+
 elif mode == "📊 Dashboard":
     st.header("📊 Dashboard")
-    st.write("📈 Learning progress will be displayed here (to be implemented).")
+
+    xp = st.session_state.progress["xp"]
+    level = xp // 100
+    xp_progress = xp % 100
+
+    st.subheader(f"🌟 Level {level}  |  {xp} XP")
+    st.progress(xp_progress / 100)
+
+    st.write("### Stats")
+    st.write(f"- 📝 Quizzes taken: {st.session_state.progress['quizzes_taken']}")
+    st.write(f"- ✅ Correct answers: {st.session_state.progress['correct_answers']}")
+    st.write(f"- ✍️ Assignments completed: {st.session_state.progress['assignments_done']}")
+
     if st.session_state.quiz_topic:
         st.write(f"- Last quiz topic: {st.session_state.quiz_topic}")
     if st.session_state.flashcards_topic:
