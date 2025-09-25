@@ -1,10 +1,31 @@
 import streamlit as st
 import json
 import re
+import os
 from openai import OpenAI
 
 # Initialize OpenAI client
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# ------------------------------
+# Progress Persistence Helpers
+# ------------------------------
+
+PROGRESS_FILE = "progress.json"
+
+def load_progress():
+    if os.path.exists(PROGRESS_FILE):
+        try:
+            with open(PROGRESS_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {"xp": 0, "quizzes_taken": 0, "correct_answers": 0, "assignments_done": 0}
+    else:
+        return {"xp": 0, "quizzes_taken": 0, "correct_answers": 0, "assignments_done": 0}
+
+def save_progress(progress):
+    with open(PROGRESS_FILE, "w") as f:
+        json.dump(progress, f)
 
 # ------------------------------
 # Helper functions
@@ -110,14 +131,9 @@ if "assignments" not in st.session_state:
 if "assignment_topic" not in st.session_state:
     st.session_state.assignment_topic = ""
 
-# 🎯 Progress Tracker
+# 🎯 Progress Tracker (persistent)
 if "progress" not in st.session_state:
-    st.session_state.progress = {
-        "xp": 0,
-        "quizzes_taken": 0,
-        "correct_answers": 0,
-        "assignments_done": 0
-    }
+    st.session_state.progress = load_progress()
 
 # ------------------------------
 # Streamlit UI
@@ -210,6 +226,7 @@ elif mode == "📝 Quizzes":
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
             st.session_state.progress["xp"] += correct_count * 10
+            save_progress(st.session_state.progress)
 
 # ------------------------------
 # Mode: Assignments
@@ -225,6 +242,7 @@ elif mode == "✍️ Assignments":
         # 🎯 Update progress
         st.session_state.progress["assignments_done"] += 1
         st.session_state.progress["xp"] += 20
+        save_progress(st.session_state.progress)
 
     if st.session_state.assignments:
         st.write(f"### Assignments on: {st.session_state.assignment_topic}")
