@@ -266,6 +266,17 @@ elif mode == "📊 Dashboard":
     st.write(f"- ✅ Correct answers: {st.session_state.progress['correct_answers']}")
     st.write(f"- ✍️ Assignments completed: {st.session_state.progress['assignments_done']}")
 
+        # 🔄 Reset progress button
+    if st.button("Reset Progress"):
+        st.session_state.progress = {
+            "xp": 0,
+            "quizzes_taken": 0,
+            "correct_answers": 0,
+            "assignments_done": 0
+        }
+        save_progress(st.session_state.progress)
+        st.success("Progress has been reset!")
+
     if st.session_state.quiz_topic:
         st.write(f"- Last quiz topic: {st.session_state.quiz_topic}")
     if st.session_state.flashcards_topic:
