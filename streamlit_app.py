@@ -110,6 +110,15 @@ if "assignments" not in st.session_state:
 if "assignment_topic" not in st.session_state:
     st.session_state.assignment_topic = ""
 
+if "progress" not in st.session_state:
+    st.session_state.progress = {
+        "xp": 0,
+        "quizzes_taken": 0,
+        "correct_answers": 0,
+        "assignments_done": 0
+    }
+
+
 # ------------------------------
 # Streamlit UI
 # ------------------------------
