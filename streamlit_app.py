@@ -101,7 +101,7 @@ if mode == "🤖 Chatbot":
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": user_input}]
         )
-        st.write("**Bot:**", response["choices"][0]["message"]["content"])
+        st.write("**Bot:**", response.choices[0].message.content)
 
 elif mode == "📖 Flashcards":
     st.header("📖 Flashcards")
