@@ -196,15 +196,15 @@ elif mode == "📝 Quizzes":
             )
             st.session_state.answers[i] = selected
 
-        if st.button("Check Answers"):
-    correct_count = 0
-    for i, q in enumerate(st.session_state.quizzes, 1):
-        user_ans = st.session_state.answers.get(i, None)
-        if user_ans == q["answer"]:
-            st.success(f"Q{i}: ✅ Correct!")
-            correct_count += 1
-        else:
-            st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
+    if st.button("Check Answers"):
+        correct_count = 0
+        for i, q in enumerate(st.session_state.quizzes, 1):
+            user_ans = st.session_state.answers.get(i, None)
+            if user_ans == q["answer"]:
+                st.success(f"Q{i}: ✅ Correct!")
+                correct_count += 1
+            else:
+                st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
 
     # Update progress
     st.session_state.progress["quizzes_taken"] += 1
