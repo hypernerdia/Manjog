@@ -190,7 +190,7 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
 
-    # 🎨 Korean flag background @ 50% opacity + overlay + bubbles
+    # 🎨 Korean flag background @ 50% opacity
     st.markdown(
         """
         <style>
@@ -206,13 +206,6 @@ if mode == "🤖 Chatbot":
             background-repeat: no-repeat;   
             background-position: center;    
             opacity: 0.5; /* 🔥 makes the flag 50% transparent */
-            z-index: -2;
-        }
-        .white-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(255, 255, 255, 0.6); /* brighten */
             z-index: -1;
         }
         .chat-container {
@@ -248,7 +241,6 @@ if mode == "🤖 Chatbot":
         }
         </style>
         <div class="flag-overlay"></div>
-        <div class="white-overlay"></div>
         """,
         unsafe_allow_html=True
     )
