@@ -276,6 +276,37 @@ elif mode == "📊 Dashboard":
         save_progress(st.session_state.progress)
         st.success("Progress has been reset!")
 
+        # XP Progress Bar (assuming 100 XP = 1 level for example)
+    st.subheader("🔥 XP Progress")
+    xp = st.session_state.progress.get("xp", 0)
+    level = xp // 100
+    progress_to_next = xp % 100
+    st.write(f"Level {level} — {xp} XP total")
+    st.progress(progress_to_next / 100)
+
+    # Key Metrics
+    st.subheader("📈 Stats Overview")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Quizzes Taken", st.session_state.progress.get("quizzes_taken", 0))
+    col2.metric("Correct Answers", st.session_state.progress.get("correct_answers", 0))
+    col3.metric("Assignments Done", st.session_state.progress.get("assignments_done", 0))
+
+    # Simple Chart (XP Growth over time)
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+    xp_history = pd.DataFrame({
+        "XP": [10, 30, 60, xp],  # you can log these dynamically later
+        "Stage": ["Day 1", "Day 2", "Day 3", "Now"]
+    })
+
+    st.subheader("📊 XP Growth")
+    fig, ax = plt.subplots()
+    ax.plot(xp_history["Stage"], xp_history["XP"], marker="o")
+    ax.set_ylabel("XP")
+    ax.set_xlabel("Progress")
+    st.pyplot(fig)
+
     if st.session_state.quiz_topic:
         st.write(f"- Last quiz topic: {st.session_state.quiz_topic}")
     if st.session_state.flashcards_topic:
