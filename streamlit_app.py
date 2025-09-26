@@ -190,26 +190,59 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
 
-    # Scrollable chat container (moved above input handling)
+    # 🎨 Full-page Korean background
     st.markdown(
         """
         <style>
+        .stApp {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
         .chat-container {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background-color: #fafafa;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.8); /* translucent white overlay for readability */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .user-bubble {
+            background-color: #ff4c4c; /* Red */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+            margin-left: auto;
+            margin-bottom: 10px;
+            text-align: right;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+        }
+        .bot-bubble {
+            background-color: #4682B4; /* Steel Blue */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+            margin-right: auto;
+            margin-bottom: 10px;
+            text-align: left;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
+    # --- Chat container ---
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for msg in st.session_state.chat_history:
-        render_message(msg["role"], msg["content"])
+        if msg["role"] == "user":
+            st.markdown(f"<div class='user-bubble'>🧑 {msg['content']}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div class='bot-bubble'>🤖 {msg['content']}</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     # --- Input box ---
@@ -228,8 +261,8 @@ if mode == "🤖 Chatbot":
         )
         bot_reply = response.choices[0].message.content
         st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
-        st.rerun()  # refresh chat
-
+        st.rerun()
+        
 # ------------------------------
 # Mode: Flashcards
 # ------------------------------
