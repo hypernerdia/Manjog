@@ -57,6 +57,17 @@ def generate_flashcards(topic):
         st.error(f"⚠️ Flashcard generation failed: {e}")
         return [{"front": "학교", "back": "School"}]
 
+def generate_image(prompt):
+    try:
+        response = client.images.generate(
+            model="gpt-image-1",
+            prompt=prompt,
+            size="512x512"
+        )
+        return response.data[0].url
+    except Exception as e:
+        st.error(f"⚠️ Image generation failed: {e}")
+        return None
 
 def generate_quiz(topic):
     prompt = f"""
@@ -187,7 +198,7 @@ elif mode == "📖 Flashcards":
 
     if st.session_state.flashcards:
         st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
-        for i, card in enumerate(st.session_state.flashcards, 5):
+        for i, card in enumerate(st.session_state.flashcards, 1):
             st.write(f"**Card {i}**")
 
             # Ensure each card has a flip state
