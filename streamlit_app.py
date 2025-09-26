@@ -181,12 +181,46 @@ elif mode == "📖 Flashcards":
         st.session_state.flashcards = generate_flashcards(topic)
         st.session_state.flashcards_topic = topic
 
+        # Reset flip states when generating new flashcards
+        for i in range(len(st.session_state.flashcards)):
+            st.session_state[f"flip_{i}"] = False
+
     if st.session_state.flashcards:
         st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
-        for i, card in enumerate(st.session_state.flashcards, 1):
+        for i, card in enumerate(st.session_state.flashcards, 5):
             st.write(f"**Card {i}**")
-            st.info(f"Front: {card['front']}")
-            st.success(f"Back: {card['back']}")
+
+            # Ensure each card has a flip state
+            if f"flip_{i}" not in st.session_state:
+                st.session_state[f"flip_{i}"] = False
+
+            if not st.session_state[f"flip_{i}"]:
+                # Front: AI image with Korean text
+                img_url = generate_image(
+                    f"An educational illustration of {card['front']} with the Korean word '{card['front']}' written on the picture"
+                )
+                if img_url:
+                    st.image(img_url, caption=f"Front (Korean: {card['front']})")
+            else:
+                # Back: English meaning
+                st.success(f"Back: {card['back']}")
+
+                # Download flashcard as PNG with Korean + English
+                img_url = generate_image(
+                    f"An educational illustration of {card['front']} with the Korean word '{card['front']}' written on the picture"
+                )
+                buffer = create_flashcard_image(card['front'], card['back'], img_url)
+                if buffer:
+                    st.download_button(
+                        label=f"📥 Download Flashcard {i}",
+                        data=buffer,
+                        file_name=f"flashcard_{i}.png",
+                        mime="image/png"
+                    )
+
+            # Flip button
+            if st.button(f"Flip Card {i}", key=f"btn_{i}"):
+                st.session_state[f"flip_{i}"] = not st.session_state[f"flip_{i}"]
 
 # ------------------------------
 # Mode: Quizzes
