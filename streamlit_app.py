@@ -62,7 +62,7 @@ def generate_image(prompt):
         response = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
-            size="512x512"
+            size="1024x1024"  # ✅ fixed: valid size
         )
         return response.data[0].url
     except Exception as e:
