@@ -189,44 +189,46 @@ mode = st.sidebar.radio("Choose a mode:", [
 # ------------------------------
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
-    col1, col2 = st.columns([8,1])
-with col1:
-    user_input = st.text_input("💬 Type your message...", key="chat_box", label_visibility="collapsed")
-with col2:
-    send = st.button("📩 Send")
 
-if send and user_input:
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+    # Scrollable chat container (moved above input handling)
+    st.markdown(
+        """
+        <style>
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
     )
-    bot_reply = response.choices[0].message.content
-    st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
-    st.rerun()  # refresh chat
-    
-    # Scrollable chat container
-st.markdown(
-    """
-    <style>
-    .chat-container {
-        max-height: 400px;
-        overflow-y: auto;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        background-color: #fafafa;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
-st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-for msg in st.session_state.chat_history:
-    render_message(msg["role"], msg["content"])
-st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+    for msg in st.session_state.chat_history:
+        render_message(msg["role"], msg["content"])
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- Input box ---
+    col1, col2 = st.columns([8,1])
+    with col1:
+        user_input = st.text_input("💬 Type your message...", key="chat_box", label_visibility="collapsed")
+    with col2:
+        send = st.button("📩 Send")
+
+    if send and user_input:
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+        )
+        bot_reply = response.choices[0].message.content
+        st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+        st.rerun()  # refresh chat
 
 # ------------------------------
 # Mode: Flashcards
