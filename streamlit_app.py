@@ -57,16 +57,25 @@ def generate_flashcards(topic):
         st.error(f"⚠️ Flashcard generation failed: {e}")
         return [{"front": "학교", "back": "School"}]
 
-def generate_image(prompt):
-    try:
-        response = client.images.generate(
-            model="gpt-image-1",
-            prompt=prompt,
-            size="1024x1024"  # ✅ fixed: valid size
-        )
-        return response.data[0].url
-    except Exception as e:
-        st.error(f"⚠️ Image generation failed: {e}")
+import requests
+import base64
+
+def generate_free_image(prompt):
+    url = "https://api.stability.ai/v2beta/stable-image/generate/core"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['STABILITY_API_KEY']}"
+    }
+    data = {
+        "prompt": prompt,
+        "output_format": "png",
+        "size": "1024x1024"
+    }
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        image_base64 = response.json()["image"]
+        return "data:image/png;base64," + image_base64
+    else:
+        st.error(f"⚠️ Stability AI failed: {response.text}")
         return None
 
 def generate_quiz(topic):
