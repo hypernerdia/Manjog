@@ -57,27 +57,6 @@ def generate_flashcards(topic):
         st.error(f"⚠️ Flashcard generation failed: {e}")
         return [{"front": "학교", "back": "School"}]
 
-import requests
-import base64
-
-def generate_free_image(prompt):
-    url = "https://api.stability.ai/v2beta/stable-image/generate/core"
-    headers = {
-        "Authorization": f"Bearer {st.secrets['STABILITY_API_KEY']}"
-    }
-    data = {
-        "prompt": prompt,
-        "output_format": "png",
-        "size": "1024x1024"
-    }
-    response = requests.post(url, headers=headers, data=data)
-    if response.status_code == 200:
-        image_base64 = response.json()["image"]
-        return "data:image/png;base64," + image_base64
-    else:
-        st.error(f"⚠️ Stability AI failed: {response.text}")
-        return None
-
 def generate_quiz(topic):
     prompt = f"""
     Create 3 Korean multiple-choice quizzes about "{topic}".
@@ -201,47 +180,13 @@ elif mode == "📖 Flashcards":
         st.session_state.flashcards = generate_flashcards(topic)
         st.session_state.flashcards_topic = topic
 
-        # Reset flip states when generating new flashcards
-        for i in range(len(st.session_state.flashcards)):
-            st.session_state[f"flip_{i}"] = False
-
     if st.session_state.flashcards:
         st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
         for i, card in enumerate(st.session_state.flashcards, 1):
             st.write(f"**Card {i}**")
-
-            # Ensure each card has a flip state
-            if f"flip_{i}" not in st.session_state:
-                st.session_state[f"flip_{i}"] = False
-
-            if not st.session_state[f"flip_{i}"]:
-                # Front: AI image with Korean text
-                img_url = generate_image(
-                    f"An educational illustration of {card['front']} with the Korean word '{card['front']}' written on the picture"
-                )
-                if img_url:
-                    st.image(img_url, caption=f"Front (Korean: {card['front']})")
-            else:
-                # Back: English meaning
-                st.success(f"Back: {card['back']}")
-
-                # Download flashcard as PNG with Korean + English
-                img_url = generate_image(
-                    f"An educational illustration of {card['front']} with the Korean word '{card['front']}' written on the picture"
-                )
-                buffer = create_flashcard_image(card['front'], card['back'], img_url)
-                if buffer:
-                    st.download_button(
-                        label=f"📥 Download Flashcard {i}",
-                        data=buffer,
-                        file_name=f"flashcard_{i}.png",
-                        mime="image/png"
-                    )
-
-            # Flip button
-            if st.button(f"Flip Card {i}", key=f"btn_{i}"):
-                st.session_state[f"flip_{i}"] = not st.session_state[f"flip_{i}"]
-
+            st.info(f"Front: {card['front']}")
+            st.success(f"Back: {card['back']}")
+            
 # ------------------------------
 # Mode: Quizzes
 # ------------------------------
