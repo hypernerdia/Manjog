@@ -190,23 +190,31 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
 
-    # 🎨 Full-page Korean background
+    # 🎨 Korean flag background + brighter overlay + bubbles
     st.markdown(
         """
         <style>
         .stApp {
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-size: contain;       /* Keep flag proportions */
+            background-repeat: no-repeat;   /* No tiling */
+            background-position: center;    /* Flag centered */
+            background-color: white;        /* White base */
+        }
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.6); /* Bright transparent layer */
+            z-index: -1;
         }
         .chat-container {
             max-height: 500px;
             overflow-y: auto;
             padding: 15px;
             border: 2px solid #ddd;
-            border-radius: 15px;
-            background-color: rgba(255, 255, 255, 0.8); /* translucent white overlay for readability */
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.85);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .user-bubble {
@@ -221,7 +229,7 @@ if mode == "🤖 Chatbot":
             box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
         }
         .bot-bubble {
-            background-color: #4682B4; /* Steel Blue */
+            background-color: #4682B4; /* Blue */
             color: white;
             padding: 10px 15px;
             border-radius: 15px;
@@ -232,20 +240,12 @@ if mode == "🤖 Chatbot":
             box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
         }
         </style>
+        <div class="overlay"></div>
         """,
         unsafe_allow_html=True
     )
 
-    # --- Chat container ---
-    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.markdown(f"<div class='user-bubble'>🧑 {msg['content']}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div class='bot-bubble'>🤖 {msg['content']}</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # --- Input box ---
+    # --- Chat input box ---
     col1, col2 = st.columns([8,1])
     with col1:
         user_input = st.text_input("💬 Type your message...", key="chat_box", label_visibility="collapsed")
@@ -262,6 +262,15 @@ if mode == "🤖 Chatbot":
         bot_reply = response.choices[0].message.content
         st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
         st.rerun()
+
+    # --- Scrollable chat container ---
+    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.markdown(f"<div class='user-bubble'>{msg['content']}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div class='bot-bubble'>{msg['content']}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
         
 # ------------------------------
 # Mode: Flashcards
