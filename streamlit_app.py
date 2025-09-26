@@ -4,6 +4,45 @@ import re
 import os
 from openai import OpenAI
 
+# ------------------------------
+# Helper: render chat messages
+# ------------------------------
+def render_message(role, content):
+    if role == "user":
+        st.markdown(
+            f"""
+            <div style="display:flex; justify-content:flex-end; margin:5px 0;">
+                <div style="
+                    background-color:#DCF8C6;
+                    padding:10px 15px;
+                    border-radius:15px;
+                    max-width:70%;
+                    text-align:right;
+                    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);">
+                    <b>🧑 You:</b><br>{content}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f"""
+            <div style="display:flex; justify-content:flex-start; margin:5px 0;">
+                <div style="
+                    background-color:#E6E6FA;
+                    padding:10px 15px;
+                    border-radius:15px;
+                    max-width:70%;
+                    text-align:left;
+                    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);">
+                    <b>🤖 Bot:</b><br>{content}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
 # Initialize OpenAI client
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -150,24 +189,44 @@ mode = st.sidebar.radio("Choose a mode:", [
 # ------------------------------
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
-    user_input = st.text_input("Ask something in Korean or English:")
+    col1, col2 = st.columns([8,1])
+with col1:
+    user_input = st.text_input("💬 Type your message...", key="chat_box", label_visibility="collapsed")
+with col2:
+    send = st.button("📩 Send")
 
-    if st.button("Send") and user_input:
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
+if send and user_input:
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
-        )
-        bot_reply = response.choices[0].message.content
-        st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+    )
+    bot_reply = response.choices[0].message.content
+    st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+    st.rerun()  # refresh chat
+    
+    # Scrollable chat container
+st.markdown(
+    """
+    <style>
+    .chat-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #fafafa;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-    # Show conversation
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.write(f"🧑: {msg['content']}")
-        else:
-            st.success(f"🤖: {msg['content']}")
+st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+for msg in st.session_state.chat_history:
+    render_message(msg["role"], msg["content"])
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------------------
 # Mode: Flashcards
