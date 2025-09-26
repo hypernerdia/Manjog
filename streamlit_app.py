@@ -190,28 +190,29 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.header("🤖 Chatbot")
 
-    # 🎨 Korean flag background (50% transparent) + brighter overlay + bubbles
+    # 🎨 Korean flag background @ 50% opacity + overlay + bubbles
     st.markdown(
         """
         <style>
         .stApp {
-            background-color: white; /* Base */
+            background-color: white; /* fallback */
         }
         .flag-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: url('https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg') 
-                        center center no-repeat;
-            background-size: contain;
-            opacity: 0.5; /* 50% transparent flag */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg');
+            background-size: contain;       
+            background-repeat: no-repeat;   
+            background-position: center;    
+            opacity: 0.5; /* 🔥 makes the flag 50% transparent */
             z-index: -2;
         }
-        .overlay {
+        .white-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-color: rgba(255, 255, 255, 0.6); /* Bright transparent layer */
+            background-color: rgba(255, 255, 255, 0.6); /* brighten */
             z-index: -1;
         }
         .chat-container {
@@ -247,7 +248,7 @@ if mode == "🤖 Chatbot":
         }
         </style>
         <div class="flag-overlay"></div>
-        <div class="overlay"></div>
+        <div class="white-overlay"></div>
         """,
         unsafe_allow_html=True
     )
