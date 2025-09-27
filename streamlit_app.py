@@ -31,6 +31,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown(
+    """
+    <style>
+    /* Set background for the whole app */
+    .stApp {
+        background-color: #E6ECF8; /* Light navy blue */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ------------------------------
 # Helper: Font Formatting
 # ------------------------------
