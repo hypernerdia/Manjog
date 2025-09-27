@@ -351,7 +351,7 @@ if mode == "🤖 Chatbot":
     st.markdown("</div>", unsafe_allow_html=True)
         
 # ------------------------------
-# Mode: Flashcards
+# Mode: Flashcards (updated)
 # ------------------------------
 elif mode == "📖 Flashcards":
     st.header("📖 Flashcards")
@@ -362,11 +362,66 @@ elif mode == "📖 Flashcards":
         st.session_state.flashcards_topic = topic
 
     if st.session_state.flashcards:
-        st.write(f"### Flashcards on: {st.session_state.flashcards_topic}")
+        st.write(f"### Flashcards on: <span class='english-text'>{st.session_state.flashcards_topic}</span>", unsafe_allow_html=True)
+
+        # Render flashcards
         for i, card in enumerate(st.session_state.flashcards, 1):
-            st.write(f"**Card {i}**")
-            st.info(f"Front: {card['front']}")
-            st.success(f"Back: {card['back']}")
+            korean_word = card['front']
+            english_word = card['back']
+
+            st.markdown(
+                f"""
+                <style>
+                .flashcard-container {{
+                    perspective: 1000px;
+                    display: inline-block;
+                    margin: 10px;
+                }}
+                .flashcard {{
+                    width: 200px;
+                    height: 120px;
+                    text-align: center;
+                    font-family: 'Nanum Myeongjo', sans-serif;
+                    cursor: pointer;
+                    transition: transform 0.6s;
+                    transform-style: preserve-3d;
+                    position: relative;
+                    border-radius: 15px;
+                }}
+                .flashcard.flipped {{
+                    transform: rotateY(180deg);
+                }}
+                .flashcard .front, .flashcard .back {{
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    backface-visibility: hidden;
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 24px;
+                    font-weight: bold;
+                }}
+                .flashcard .front {{
+                    background-color: #1F3B70;  /* Dark Blue */
+                }}
+                .flashcard .back {{
+                    background-color: #8B0000;  /* Dark Red */
+                    transform: rotateY(180deg);
+                    font-family: 'Calligraffitti', sans-serif;
+                }}
+                </style>
+                <div class="flashcard-container">
+                    <div class="flashcard" id="card{i}" onclick="this.classList.toggle('flipped')">
+                        <div class="front">{korean_word}</div>
+                        <div class="back">{english_word}</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
             
 # ------------------------------
 # Mode: Quizzes
