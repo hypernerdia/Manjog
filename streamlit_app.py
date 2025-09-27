@@ -35,6 +35,36 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown(
+    """
+    <style>
+    /* Sidebar radio button styling */
+    .stRadio div[role="radiogroup"] label {
+        display: block;
+        background-color: #ffcccc; /* light red */
+        color: black;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 10px; /* rounded corners */
+        cursor: pointer;
+        border: 2px solid transparent; /* default border */
+        font-family: 'Calligraffitti', sans-serif;
+    }
+
+    /* Selected option */
+    .stRadio div[role="radiogroup"] label[data-baseweb="radio"]:has(input:checked) {
+        border: 2px solid #003366; /* dark blue border */
+    }
+
+    /* Hover effect */
+    .stRadio div[role="radiogroup"] label:hover {
+        background-color: #ffb3b3;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ------------------------------
 # Helper: render chat messages
 # ------------------------------
