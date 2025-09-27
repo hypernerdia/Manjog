@@ -268,7 +268,7 @@ if mode == "🤖 Chatbot":
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg');
+            background-image: url('https://lh3.googleusercontent.com/gg-dl/AJfQ9KTdPmW50RZdroUTFHXooYhr5VKSMioWsOO7VrMQb4O6yeYvBsoEVl2ZI0OFv21WIwyH40qiMfT0UfLm6oDNHcKBE2E_vof-P39PurGiwApoik9LLaSfs0Xf2Rg_fOxesDVfl7ojyRVuyo3V6-oBleTGW_6lsut4iP3Qp09NA6sYD0unBg=s1024');
             background-size: contain;       
             background-repeat: no-repeat;   
             background-position: center;    
