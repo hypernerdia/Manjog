@@ -5,6 +5,37 @@ import os
 from openai import OpenAI
 
 # ------------------------------
+# Global Fonts & Background
+# ------------------------------
+st.markdown(
+    """
+    <style>
+    /* Import Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Calligraffitti&display=swap');
+
+    @font-face {
+        font-family: 'Chiron Sung HK';
+        src: url('https://fonts.cdnfonts.com/s/17877/ChironSungHK-Medium.woff') format('woff');
+    }
+
+    /* Apply English font (Calligraffitti) and Korean font (Chiron Sung HK) */
+    html, body, [class*="css"]  {
+        font-family: 'Calligraffitti', 'Chiron Sung HK', sans-serif;
+    }
+
+    /* Force Korean characters to use Chiron Sung HK */
+    body, div, p, span, input, textarea {
+        font-family: 'Calligraffitti', sans-serif;
+    }
+    :lang(ko), .korean-text {
+        font-family: 'Chiron Sung HK', sans-serif;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ------------------------------
 # Helper: render chat messages
 # ------------------------------
 def render_message(role, content):
