@@ -12,28 +12,34 @@ st.markdown(
     <style>
     /* Import Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Calligraffitti&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap');
 
-    @font-face {
-        font-family: 'Chiron Sung HK';
-        src: url('https://fonts.cdnfonts.com/s/17877/ChironSungHK-Medium.woff') format('woff');
-    }
-
-    /* Apply English font (Calligraffitti) and Korean font (Chiron Sung HK) */
+    /* Apply English font (Calligraffitti) and Korean font (Nanum Myeongjo) */
     html, body, [class*="css"]  {
-        font-family: 'Calligraffitti', 'Chiron Sung HK', sans-serif;
+        font-family: 'Calligraffitti', 'Nanum Myeongjo', sans-serif;
     }
 
-    /* Force Korean characters to use Chiron Sung HK */
+    /* Force Korean characters to use Nanum Myeongjo */
     body, div, p, span, input, textarea {
         font-family: 'Calligraffitti', sans-serif;
     }
     :lang(ko), .korean-text {
-        font-family: 'Chiron Sung HK', sans-serif;
+        font-family: 'Nanum Myeongjo', serif;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+# ------------------------------
+# Helper: Font Formatting
+# ------------------------------
+def format_text(text):
+    """Detect Korean vs English and wrap in appropriate font spans."""
+    if re.search(r"[\u3131-\uD79D]", text):  # Korean range
+        return f"<span style='font-family: Nanum Myeongjo;'>{text}</span>"
+    else:
+        return f"<span style='font-family: Calligraffitti;'>{text}</span>"
 
 st.markdown(
     """
