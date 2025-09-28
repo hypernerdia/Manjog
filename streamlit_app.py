@@ -351,101 +351,131 @@ if mode == "🤖 Chatbot":
     st.markdown("</div>", unsafe_allow_html=True)
         
 # ------------------------------
-# Mode: Flashcards (fixed flipping)
+# Mode: Flashcards (fixed visual + flipping)
 # ------------------------------
 elif mode == "📖 Flashcards":
-    st.header("📖 Flashcards")
-    topic = st.text_input("Enter a topic for flashcards:")
+    # heading (uses format_text to keep fonts consistent)
+    st.markdown(f"## {format_text('📖 Flashcards')}", unsafe_allow_html=True)
+
+    topic = st.text_input(format_text("Enter a topic for flashcards:"))
 
     if st.button("Generate Flashcards") and topic:
         st.session_state.flashcards = generate_flashcards(topic)
         st.session_state.flashcards_topic = topic
 
     if st.session_state.flashcards:
-        st.write(
-            f"### Flashcards on: <span class='english-text'>{st.session_state.flashcards_topic}</span>",
+        st.markdown(
+            f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}",
             unsafe_allow_html=True
         )
 
-        # Flashcards CSS (checkbox hack)
+        # CSS: grid + card + flip (checkbox hack). Insert once before cards.
         st.markdown(
             """
             <style>
-            .flashcard-container {
-                perspective: 1000px;
-                display: inline-block;
-                margin: 10px;
+            /* grid layout */
+            .flashcards-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                align-items: flex-start;
             }
-            .flashcard {
-                width: 200px;
-                height: 120px;
+
+            /* outer label acts as clickable card */
+            .card {
+                display: inline-block;
+                perspective: 1000px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* hide the checkbox */
+            .card input[type="checkbox"] {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+                height: 0; width: 0;
+            }
+
+            /* inner 3D wrapper */
+            .card-inner {
+                width: 260px;
+                height: 150px;
                 position: relative;
                 transform-style: preserve-3d;
-                transition: transform 0.6s;
-                cursor: pointer;
-                border-radius: 15px;
+                transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+                border-radius: 12px;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+                user-select: none;
             }
-            .flashcard input {
-                display: none;
+
+            /* flip when checkbox checked */
+            .card input[type="checkbox"]:checked + .card-inner {
+                transform: rotateY(180deg);
             }
-            .flashcard .front, .flashcard .back {
+
+            /* front/back faces */
+            .card-face {
                 position: absolute;
-                width: 100%;
-                height: 100%;
-                backface-visibility: hidden;
-                border-radius: 15px;
+                inset: 0;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 22px;
-                font-weight: bold;
-                color: white;
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                border-radius: 12px;
+                color: #ffffff;
+                font-size: 28px;
+                font-weight: 700;
+                padding: 12px;
+                text-align: center;
+                word-break: break-word;
             }
-            .flashcard .front {
-                background-color: #1F3B70; /* Dark Blue */
-                font-family: 'Nanum Myeongjo', serif;
+
+            /* front style (dark blue) */
+            .card-front {
+                background: #173a69; /* dark blue */
             }
-            .flashcard .back {
-                background-color: #8B0000; /* Dark Red */
+
+            /* back style (dark red) */
+            .card-back {
+                background: #8B0000; /* dark red */
                 transform: rotateY(180deg);
-                font-family: 'Calligraffitti', cursive;
             }
-            .flashcard input:checked ~ label .flashcard-inner {
-                transform: rotateY(180deg);
-            }
-            .flashcard-inner {
-                width: 100%;
-                height: 100%;
-                position: relative;
-                transform-style: preserve-3d;
-                transition: transform 0.6s;
+
+            /* make cards responsive on narrow screens */
+            @media (max-width: 600px) {
+                .card-inner { width: 90vw; height: 140px; }
+                .card-face { font-size: 22px; }
             }
             </style>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
-        # Render flashcards
+        # Render the grid container
+        st.markdown('<div class="flashcards-grid">', unsafe_allow_html=True)
+
+        # Each card: label > input + .card-inner > front/back
         for i, card in enumerate(st.session_state.flashcards, 1):
-            korean_word = card['front']
-            english_word = card['back']
+            # use your existing format_text helper so Korean/English fonts are correct
+            front_html = format_text(card.get("front", ""))
+            back_html = format_text(card.get("back", ""))
 
-            st.markdown(
-                f"""
-                <div class="flashcard-container">
-                    <input type="checkbox" id="card{i}">
-                    <label for="card{i}">
-                        <div class="flashcard-inner">
-                            <div class="flashcard front">{korean_word}</div>
-                            <div class="flashcard back">{english_word}</div>
-                        </div>
-                    </label>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            # Insert the card HTML. Input is inside label; clicking toggles the checkbox
+            card_html = f"""
+                <label class="card">
+                    <input type="checkbox" />
+                    <div class="card-inner">
+                        <div class="card-face card-front">{front_html}</div>
+                        <div class="card-face card-back">{back_html}</div>
+                    </div>
+                </label>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
 
-            
+        st.markdown('</div>', unsafe_allow_html=True)
+           
 # ------------------------------
 # Mode: Quizzes
 # ------------------------------
