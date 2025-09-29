@@ -357,7 +357,7 @@ elif mode == "📖 Flashcards":
     # heading (uses format_text to keep fonts consistent)
     st.markdown(f"## {format_text('📖 Flashcards')}", unsafe_allow_html=True)
 
-    topic = st.text_input(format_text("Enter a topic for flashcards:"))
+    topic = st.text_input("Enter a topic for flashcards:")
 
     if st.button("Generate Flashcards") and topic:
         st.session_state.flashcards = generate_flashcards(topic)
