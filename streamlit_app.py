@@ -484,12 +484,15 @@ elif mode == "📖 Flashcards":
 # Mode: Quizzes
 # ------------------------------
 elif mode == "📝 Quizzes":
-    st.markdown(
-        f"<h2>{format_text('📝 Quizzes')}</h2>",
-        unsafe_allow_html=True
-)
-    st.markdown(format_text("Enter a topic for quizzes:") + "<br>", unsafe_allow_html=True)
+    # Heading for quizzes (with your font formatting)
+    st.markdown(format_text("📚 Quizzes"), unsafe_allow_html=True)
+
+    # Input field: assign a session_state key directly
+    st.markdown(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
     topic = st.text_input("", key="quiz_topic")
+
+    # Access the value safely
+    topic = st.session_state["quiz_topic"]
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
