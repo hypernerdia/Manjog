@@ -266,7 +266,7 @@ mode = st.sidebar.radio("Choose a mode:", [
 # Mode: Chatbot
 # ------------------------------
 if mode == "🤖 Chatbot":
-    st.header("🤖 Chatbot")
+    st.header(format_text("🤖 Chatbot"))
 
     # 🎨 Korean flag background @ 50% opacity
     st.markdown(
