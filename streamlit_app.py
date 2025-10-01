@@ -488,7 +488,7 @@ elif mode == "📝 Quizzes":
         f"<h2>{format_text('📝 Quizzes')}</h2>",
         unsafe_allow_html=True
 )
-    st.markdown(format_text("Enter a topic for quizzes:") + "<br>", unsafe_allow_html=True)
+    st.markdown(topic = format_text("Enter a topic for quizzes:") + "<br>", unsafe_allow_html=True)
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
