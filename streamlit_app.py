@@ -484,8 +484,11 @@ elif mode == "📖 Flashcards":
 # Mode: Quizzes
 # ------------------------------
 elif mode == "📝 Quizzes":
-    st.header("📝 Quizzes")
-    topic = st.text_input("Enter a topic for quizzes:")
+    st.markdown(
+        f"<h2>{format_text('📝 Quizzes')}</h2>",
+        unsafe_allow_html=True
+)
+    topic = st.text_input(format_text("Enter a topic for quizzes:"))
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
