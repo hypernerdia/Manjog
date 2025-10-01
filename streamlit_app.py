@@ -488,7 +488,7 @@ elif mode == "📝 Quizzes":
         f"<h2>{format_text('📝 Quizzes')}</h2>",
         unsafe_allow_html=True
 )
-    topic = st.text_input(format_text("Enter a topic for quizzes:"))
+    topic = st.text_input(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
