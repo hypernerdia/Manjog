@@ -475,21 +475,27 @@ elif mode == "📖 Flashcards":
 elif mode == "📝 Quizzes":
     st.markdown(f"<h2>{format_text('📚 Quizzes')}</h2>", unsafe_allow_html=True)
 
-    # ✅ Fix: Show label separately (no unsafe_allow_html in text_input)
+    # ✅ Show label separately (keep custom font formatting)
     st.markdown(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
+
+    # ✅ Use key binding for session_state (avoids direct assignment issues)
     topic = st.text_input("", key="quiz_topic")
-    topic = st.session_state["quiz_topic"]
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
-        st.session_state["quiz_topic"] = topic
         st.session_state.answers = {}
 
     if st.session_state.quizzes:
-        st.write(f"### Quiz on: {st.session_state["quiz_topic"]}")
+        # ✅ Safely reference the topic already in session_state
+        st.write(f"### Quiz on: {st.session_state['quiz_topic']}")
+
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
-            selected = st.radio(f"Choose an answer for Q{i}:", q["options"], key=f"quiz_{i}")
+            selected = st.radio(
+                f"Choose an answer for Q{i}:",
+                q["options"],
+                key=f"quiz_{i}"
+            )
             st.session_state.answers[i] = selected
 
         if st.button("Check Answers"):
@@ -502,6 +508,7 @@ elif mode == "📝 Quizzes":
                 else:
                     st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
 
+            # ✅ Update progress safely
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
             st.session_state.progress["xp"] += correct_count * 10
