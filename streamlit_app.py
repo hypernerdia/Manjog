@@ -482,11 +482,11 @@ elif mode == "📝 Quizzes":
 
     if st.button("Generate Quiz") and topic:
         st.session_state.quizzes = generate_quiz(topic)
-        st.session_state.quiz_topic = topic
+        st.session_state["quiz_topic"] = topic
         st.session_state.answers = {}
 
     if st.session_state.quizzes:
-        st.write(f"### Quiz on: {st.session_state.quiz_topic}")
+        st.write(f"### Quiz on: {st.session_state["quiz_topic"]}")
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
             selected = st.radio(f"Choose an answer for Q{i}:", q["options"], key=f"quiz_{i}")
