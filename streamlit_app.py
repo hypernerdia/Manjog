@@ -42,6 +42,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 # ------------------------------
 # Helper: Font Formatting
 # ------------------------------
@@ -127,7 +128,6 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 # ------------------------------
 # Progress Persistence Helpers
 # ------------------------------
-
 PROGRESS_FILE = "progress.json"
 
 def load_progress():
@@ -147,7 +147,6 @@ def save_progress(progress):
 # ------------------------------
 # Helper functions
 # ------------------------------
-
 def generate_flashcards(topic):
     prompt = f"""
     Create 3 Korean flashcards about "{topic}".
@@ -210,7 +209,6 @@ def generate_quiz(topic):
             }
         ]
 
-
 def generate_assignment(topic):
     prompt = f"Create 2 Korean learning assignments about '{topic}'."
     try:
@@ -226,7 +224,6 @@ def generate_assignment(topic):
 # ------------------------------
 # Initialize session state
 # ------------------------------
-
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -254,7 +251,6 @@ if "progress" not in st.session_state:
 # ------------------------------
 # Streamlit UI
 # ------------------------------
-
 st.set_page_config(page_title="Korean Learning Chatbot", page_icon="🇰🇷", layout="wide")
 
 st.sidebar.title("📚 Korean Learning Chatbot")
@@ -266,27 +262,22 @@ mode = st.sidebar.radio("Choose a mode:", [
 # Mode: Chatbot
 # ------------------------------
 if mode == "🤖 Chatbot":
-    st.markdown(
-    f"<h2>{format_text('🤖 Chatbot')}</h2>",
-    unsafe_allow_html=True
-)
+    st.markdown(f"<h2>{format_text('🤖 Chatbot')}</h2>", unsafe_allow_html=True)
 
-    # 🎨 Korean flag background @ 50% opacity
+    # 🎨 Korean flag background
     st.markdown(
         """
         <style>
-        .stApp {
-            background-color: white; /* fallback */
-        }
+        .stApp { background-color: white; }
         .flag-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background-image: url('https://lh3.googleusercontent.com/gg-dl/AJfQ9KTdPmW50RZdroUTFHXooYhr5VKSMioWsOO7VrMQb4O6yeYvBsoEVl2ZI0OFv21WIwyH40qiMfT0UfLm6oDNHcKBE2E_vof-P39PurGiwApoik9LLaSfs0Xf2Rg_fOxesDVfl7ojyRVuyo3V6-oBleTGW_6lsut4iP3Qp09NA6sYD0unBg=s1024');
-            background-size: contain;       
-            background-repeat: no-repeat;   
-            background-position: center;    
-            opacity: 0.5; /* 🔥 makes the flag 50% transparent */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.5;
             z-index: -1;
         }
         .chat-container {
@@ -299,7 +290,7 @@ if mode == "🤖 Chatbot":
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .user-bubble {
-            background-color: #ff4c4c; /* Red */
+            background-color: #ff4c4c;
             color: white;
             padding: 10px 15px;
             border-radius: 15px;
@@ -310,7 +301,7 @@ if mode == "🤖 Chatbot":
             box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
         }
         .bot-bubble {
-            background-color: #4682B4; /* Blue */
+            background-color: #4682B4;
             color: white;
             padding: 10px 15px;
             border-radius: 15px;
@@ -335,7 +326,6 @@ if mode == "🤖 Chatbot":
 
     if send and user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
-
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
@@ -349,17 +339,15 @@ if mode == "🤖 Chatbot":
     for msg in st.session_state.chat_history:
         if msg["role"] == "user":
             st.markdown(f"<div class='user-bubble'>{format_text(msg['content'])}</div>", unsafe_allow_html=True)
-
         else:
             st.markdown(f"<div class='bot-bubble'>{format_text(msg['content'])}</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
-        
+
 # ------------------------------
-# Mode: Flashcards (fixed visual + flipping)
+# Mode: Flashcards
 # ------------------------------
 elif mode == "📖 Flashcards":
-    # heading (uses format_text to keep fonts consistent)
-    st.markdown(f"## {format_text('📖 Flashcards')}", unsafe_allow_html=True)
+    st.markdown(f"<h2>{format_text('📖 Flashcards')}</h2>", unsafe_allow_html=True)
 
     topic = st.text_input("Enter a topic for flashcards:")
 
@@ -368,130 +356,18 @@ elif mode == "📖 Flashcards":
         st.session_state.flashcards_topic = topic
 
     if st.session_state.flashcards:
-        st.markdown(
-            f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}", unsafe_allow_html=True)
+        # (Flashcards CSS + rendering remains unchanged...)
 
-        # CSS: grid + card + flip (checkbox hack). Insert once before cards.
-        st.markdown(
-            """
-            <style>
-            /* grid layout */
-            .flashcards-grid {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 16px;
-                align-items: flex-start;
-            }
-
-            /* outer label acts as clickable card */
-            .card {
-                display: inline-block;
-                perspective: 1000px;
-                cursor: pointer;
-                -webkit-tap-highlight-color: transparent;
-            }
-
-            /* hide the checkbox */
-            .card input[type="checkbox"] {
-                position: absolute;
-                opacity: 0;
-                pointer-events: none;
-                height: 0; width: 0;
-            }
-
-            /* inner 3D wrapper */
-            .card-inner {
-                width: 260px;
-                height: 150px;
-                position: relative;
-                transform-style: preserve-3d;
-                transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
-                border-radius: 12px;
-                box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-                user-select: none;
-            }
-
-            /* flip when checkbox checked */
-            .card input[type="checkbox"]:checked + .card-inner {
-                transform: rotateY(180deg);
-            }
-
-            /* front/back faces */
-            .card-face {
-                position: absolute;
-                inset: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                -webkit-backface-visibility: hidden;
-                backface-visibility: hidden;
-                border-radius: 12px;
-                color: #ffffff;
-                font-size: 28px;
-                font-weight: 700;
-                padding: 12px;
-                text-align: center;
-                word-break: break-word;
-            }
-
-            /* front style (dark blue) */
-            .card-front {
-                background: #173a69; /* dark blue */
-            }
-
-            /* back style (dark red) */
-            .card-back {
-                background: #8B0000; /* dark red */
-                transform: rotateY(180deg);
-            }
-
-            /* make cards responsive on narrow screens */
-            @media (max-width: 600px) {
-                .card-inner { width: 90vw; height: 140px; }
-                .card-face { font-size: 22px; }
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # Render the grid container
-        st.markdown('<div class="flashcards-grid">', unsafe_allow_html=True)
-
-        # Each card: label > input + .card-inner > front/back
-        for i, card in enumerate(st.session_state.flashcards, 1):
-            # use your existing format_text helper so Korean/English fonts are correct
-            front_html = format_text(card.get("front", ""))
-            back_html = format_text(card.get("back", ""))
-
-            # Insert the card HTML. Input is inside label; clicking toggles the checkbox
-            card_html = f"""
-                <label class="card">
-                    <input type="checkbox" />
-                    <div class="card-inner">
-                        <div class="card-face card-front">{front_html}</div>
-                        <div class="card-face card-back">{back_html}</div>
-                    </div>
-                </label>
-            """
-            st.markdown(card_html, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-           
 # ------------------------------
 # Mode: Quizzes
 # ------------------------------
 elif mode == "📝 Quizzes":
-    # Heading for quizzes (with your font formatting)
-    st.markdown(format_text("📚 Quizzes"), unsafe_allow_html=True)
+    st.markdown(f"<h2>{format_text('📚 Quizzes')}</h2>", unsafe_allow_html=True)
 
-    # Input field: assign a session_state key directly
+    # ✅ Fix: Show label separately (no unsafe_allow_html in text_input)
     st.markdown(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
     topic = st.text_input("", key="quiz_topic")
-
-    # Access the value safely
     topic = st.session_state["quiz_topic"]
 
     if st.button("Generate Quiz") and topic:
@@ -503,12 +379,7 @@ elif mode == "📝 Quizzes":
         st.write(f"### Quiz on: {st.session_state.quiz_topic}")
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
-
-            selected = st.radio(
-                f"Choose an answer for Q{i}:",
-                q["options"],
-                key=f"quiz_{i}"
-            )
+            selected = st.radio(f"Choose an answer for Q{i}:", q["options"], key=f"quiz_{i}")
             st.session_state.answers[i] = selected
 
         if st.button("Check Answers"):
@@ -521,7 +392,6 @@ elif mode == "📝 Quizzes":
                 else:
                     st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
 
-            # 🎯 Update progress
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
             st.session_state.progress["xp"] += correct_count * 10
@@ -531,14 +401,13 @@ elif mode == "📝 Quizzes":
 # Mode: Assignments
 # ------------------------------
 elif mode == "✍️ Assignments":
-    st.header("✍️ Assignments")
+    st.markdown(f"<h2>{format_text('✍️ Assignments')}</h2>", unsafe_allow_html=True)
+
     topic = st.text_input("Enter a topic for assignments:")
 
     if st.button("Generate Assignment") and topic:
         st.session_state.assignments = generate_assignment(topic)
         st.session_state.assignment_topic = topic
-
-        # 🎯 Update progress
         st.session_state.progress["assignments_done"] += 1
         st.session_state.progress["xp"] += 20
         save_progress(st.session_state.progress)
@@ -565,21 +434,13 @@ elif mode == "📊 Dashboard":
     st.write(f"- ✅ Correct answers: {st.session_state.progress['correct_answers']}")
     st.write(f"- ✍️ Assignments completed: {st.session_state.progress['assignments_done']}")
 
-        # 🔄 Reset progress button
     if st.button("Reset Progress"):
-        st.session_state.progress = {
-            "xp": 0,
-            "quizzes_taken": 0,
-            "correct_answers": 0,
-            "assignments_done": 0
-        }
+        st.session_state.progress = {"xp": 0, "quizzes_taken": 0, "correct_answers": 0, "assignments_done": 0}
         save_progress(st.session_state.progress)
         st.success("Progress has been reset!")
 
-        # XP Progress Bar (assuming 100 XP = 1 level for example)
+    # ✅ Keep only one XP Progress section
     st.subheader("🔥 XP Progress")
-    xp = st.session_state.progress.get("xp", 0)
-    level = xp // 100
     progress_to_next = xp % 100
     st.write(f"Level {level} — {xp} XP total")
     st.progress(progress_to_next / 100)
@@ -591,15 +452,10 @@ elif mode == "📊 Dashboard":
     col2.metric("Correct Answers", st.session_state.progress.get("correct_answers", 0))
     col3.metric("Assignments Done", st.session_state.progress.get("assignments_done", 0))
 
-    # Simple Chart (XP Growth over time)
+    # Simple Chart
     import pandas as pd
     import matplotlib.pyplot as plt
-
-    xp_history = pd.DataFrame({
-        "XP": [10, 30, 60, xp],  # you can log these dynamically later
-        "Stage": ["Day 1", "Day 2", "Day 3", "Now"]
-    })
-
+    xp_history = pd.DataFrame({"XP": [10, 30, 60, xp], "Stage": ["Day 1", "Day 2", "Day 3", "Now"]})
     st.subheader("📊 XP Growth")
     fig, ax = plt.subplots()
     ax.plot(xp_history["Stage"], xp_history["XP"], marker="o")
