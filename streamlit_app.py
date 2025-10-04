@@ -344,10 +344,11 @@ if mode == "🤖 Chatbot":
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------------------
-# Mode: Flashcards
+# Mode: Flashcards (fixed visual + flipping)
 # ------------------------------
 elif mode == "📖 Flashcards":
-    st.markdown(f"<h2>{format_text('📖 Flashcards')}</h2>", unsafe_allow_html=True)
+    # heading (uses format_text to keep fonts consistent)
+    st.markdown(f"## {format_text('📖 Flashcards')}", unsafe_allow_html=True)
 
     topic = st.text_input("Enter a topic for flashcards:")
 
@@ -356,8 +357,117 @@ elif mode == "📖 Flashcards":
         st.session_state.flashcards_topic = topic
 
     if st.session_state.flashcards:
-        st.markdown(f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}", unsafe_allow_html=True)
-        # (Flashcards CSS + rendering remains unchanged...)
+        st.markdown(
+            f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}",
+            unsafe_allow_html=True
+        )
+
+        # CSS: grid + card + flip (checkbox hack). Insert once before cards.
+        st.markdown(
+            """
+            <style>
+            /* grid layout */
+            .flashcards-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            /* outer label acts as clickable card */
+            .card {
+                display: inline-block;
+                perspective: 1000px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* hide the checkbox */
+            .card input[type="checkbox"] {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+                height: 0; width: 0;
+            }
+
+            /* inner 3D wrapper */
+            .card-inner {
+                width: 260px;
+                height: 150px;
+                position: relative;
+                transform-style: preserve-3d;
+                transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+                border-radius: 12px;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+                user-select: none;
+            }
+
+            /* flip when checkbox checked */
+            .card input[type="checkbox"]:checked + .card-inner {
+                transform: rotateY(180deg);
+            }
+
+            /* front/back faces */
+            .card-face {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                border-radius: 12px;
+                color: #ffffff;
+                font-size: 28px;
+                font-weight: 700;
+                padding: 12px;
+                text-align: center;
+                word-break: break-word;
+            }
+
+            /* front style (dark blue) */
+            .card-front {
+                background: #173a69; /* dark blue */
+            }
+
+            /* back style (dark red) */
+            .card-back {
+                background: #8B0000; /* dark red */
+                transform: rotateY(180deg);
+            }
+
+            /* make cards responsive on narrow screens */
+            @media (max-width: 600px) {
+                .card-inner { width: 90vw; height: 140px; }
+                .card-face { font-size: 22px; }
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Render the grid container
+        st.markdown('<div class="flashcards-grid">', unsafe_allow_html=True)
+
+        # Each card: label > input + .card-inner > front/back
+        for i, card in enumerate(st.session_state.flashcards, 1):
+            # use your existing format_text helper so Korean/English fonts are correct
+            front_html = format_text(card.get("front", ""))
+            back_html = format_text(card.get("back", ""))
+
+            # Insert the card HTML. Input is inside label; clicking toggles the checkbox
+            card_html = f"""
+                <label class="card">
+                    <input type="checkbox" />
+                    <div class="card-inner">
+                        <div class="card-face card-front">{front_html}</div>
+                        <div class="card-face card-back">{back_html}</div>
+                    </div>
+                </label>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------
 # Mode: Quizzes
