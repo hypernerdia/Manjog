@@ -576,6 +576,14 @@ elif mode == "💖 Wellness":
                 korean_quote = "천 리 길도 한 걸음부터다"
                 english_translation = "A journey of a thousand miles begins with a single step."
                 
+            # Store latest wellness message in session_state for persistence
+            st.session_state.latest_wellness = {
+                "feeling": feeling,
+                "motivation": motivation,
+                "korean_quote": korean_quote,
+                "english_translation": english_translation
+            }
+
         except Exception as e:
             st.error(f"⚠️ Failed to generate wellness content: {e}")
 
