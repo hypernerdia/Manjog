@@ -601,8 +601,8 @@ if "latest_wellness" in st.session_state:
     }}
     .wellness-card-inner {{
         width: 100%;
-        max-width: 400px;
-        height: 220px;
+        max-width: 600px;   /* Wider rectangle */
+        height: 180px;      /* Rectangular height */
         position: relative;
         transform-style: preserve-3d;
         transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
@@ -631,7 +631,7 @@ if "latest_wellness" in st.session_state:
         word-break: break-word;
     }}
     .wellness-card-front {{
-        background-color: #173A69; /* Front: deep blue */
+        background-color: #4C6EB1; /* Front: light deep blue */
         color: white;
         font-family: 'Calligraffitti', sans-serif;
         font-size: 20px;
