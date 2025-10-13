@@ -600,8 +600,8 @@ if "latest_wellness" in st.session_state:
         margin: 15px 0;
     }}
     .wellness-card-inner {{
-        width: 260px;       /* Match flashcards width */
-        height: 150px;      /* Rectangular height */
+        width: 400px;       /* Wider to fit content */
+        height: 220px;      /* Taller for motivation & quotes */
         position: relative;
         transform-style: preserve-3d;
         transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
@@ -628,12 +628,13 @@ if "latest_wellness" in st.session_state:
         padding: 12px;
         text-align: center;
         word-break: break-word;
+        overflow-wrap: break-word;
     }}
     .wellness-card-front {{
-        background-color: #4C6EB1; /* Front: light deep blue */
+        background-color: #4C6EB1; /* Light deep blue */
         color: white;
         font-family: 'Calligraffitti', sans-serif;
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
         transition: box-shadow 0.3s ease-in-out;
     }}
@@ -641,18 +642,27 @@ if "latest_wellness" in st.session_state:
         box-shadow: 0 0 25px 5px rgba(255,255,255,0.5);
     }}
     .wellness-card-back {{
-        background-color: #FF6F61; /* Back: light reddish pink */
+        background-color: #FF6F61; /* Light reddish pink */
         color: white;
         transform: rotateY(180deg);
         font-size: 18px;
         font-weight: 600;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        overflow-y: auto; /* allow scrolling if content too big */
+        padding: 15px;
     }}
     .wellness-card-back span.korean-text {{
         font-family: 'Nanum Myeongjo', serif;
     }}
     .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
         transform: rotateY(180deg);
+    }}
+
+    @media (max-width: 600px) {{
+        .wellness-card-inner {{
+            width: 90vw;
+            height: auto;
+        }}
     }}
     </style>
 
