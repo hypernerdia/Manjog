@@ -600,9 +600,8 @@ if "latest_wellness" in st.session_state:
         margin: 15px 0;
     }}
     .wellness-card-inner {{
-        width: 100%;
-        max-width: 600px;   /* Wider rectangle */
-        height: 180px;      /* Rectangular height */
+        width: 260px;       /* Match flashcards width */
+        height: 150px;      /* Rectangular height */
         position: relative;
         transform-style: preserve-3d;
         transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
@@ -626,7 +625,7 @@ if "latest_wellness" in st.session_state:
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
         border-radius: 12px;
-        padding: 15px;
+        padding: 12px;
         text-align: center;
         word-break: break-word;
     }}
