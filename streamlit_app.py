@@ -542,19 +542,19 @@ elif mode == "💖 Wellness":
     # Ask user for current feeling
     feeling = st.text_input("How are you feeling today?", key="wellness_feeling")
 
-    if st.button("Get Motivation") and feeling:
-        try:
-            # Prompt for generating new, fun motivational message with Korean quote
-            prompt = f"""
-            Generate a funny, uplifting, and emoji-rich motivational message for someone who is feeling '{feeling}'.
-            Include a newly created Korean quote with English translation that matches the mood.
-            Respond ONLY in JSON format like this:
-            {{
-              "motivation": "Your funny motivational message with emojis",
-              "korean_quote": "Unique Korean quote",
-              "english_translation": "English translation"
-            }}
-            """
+      if st.button("Get Motivation") and feeling:
+          try:
+              # Prompt for generating new, fun motivational message with Korean quote
+              prompt = f"""
+              Generate a funny, uplifting, and emoji-rich motivational message for someone who is feeling '{feeling}'.
+              Include a newly created Korean quote with English translation that matches the mood.
+              Respond ONLY in JSON format like this:
+              {{
+                "motivation": "Your funny motivational message with emojis",
+                "korean_quote": "Unique Korean quote",
+                "english_translation": "English translation"
+              }}
+              """
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
