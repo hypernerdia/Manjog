@@ -123,7 +123,7 @@ def render_message(role, content):
         )
 
 # Initialize OpenAI client
-client = OpenAI(api_key=st.secrets["ADOTX_API_KEY"])
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ------------------------------
 # Progress Persistence Helpers
