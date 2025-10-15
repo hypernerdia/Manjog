@@ -122,8 +122,8 @@ def render_message(role, content):
             unsafe_allow_html=True,
         )
 
-# Initialize ADOTX client
-client = ADOTX(api_key=st.secrets["ADOTX_API_KEY"])
+# Initialize OpenAI client
+client = OpenAI(api_key=st.secrets["ADOTX_API_KEY"])
 
 # ------------------------------
 # Progress Persistence Helpers
