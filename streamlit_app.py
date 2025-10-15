@@ -2,49 +2,7 @@ import streamlit as st
 import json
 import re
 import os
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-
-# ------------------------------
-# Load A.X 4.0 model & tokenizer
-# ------------------------------
-@st.cache_resource
-def load_ax_model():
-    model_name = "skt/A.X-4.0"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto"
-    )
-    return tokenizer, model
-
-tokenizer, ax_model = load_ax_model()
-
-def ax_chat_completion(messages, max_new_tokens=300):
-    prompt = ""
-    for m in messages:
-        if m["role"] == "system":
-            prompt += f"System: {m['content']}\n"
-        elif m["role"] == "user":
-            prompt += f"User: {m['content']}\n"
-        elif m["role"] == "assistant":
-            prompt += f"Assistant: {m['content']}\n"
-    prompt += "Assistant:"
-
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True).to(ax_model.device)
-    with torch.no_grad():
-        outputs = ax_model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.8,
-            top_p=0.9
-        )
-    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    # Extract assistant’s reply
-    response_text = result.split("Assistant:")[-1].strip()
-    return response_text
+from openai import OpenAI
 
 # ------------------------------
 # Global Fonts & Background
@@ -164,6 +122,9 @@ def render_message(role, content):
             unsafe_allow_html=True,
         )
 
+# Initialize OpenAI client
+client = OpenAI(api_key=st.secrets["ADOTX_API_KEY"])
+
 # ------------------------------
 # Progress Persistence Helpers
 # ------------------------------
@@ -196,10 +157,14 @@ def generate_flashcards(topic):
     ]
     """
     try:
-        raw = ax_chat_completion([
-            {"role": "system", "content": "You are a JSON-only flashcard generator."},
-            {"role": "user", "content": prompt}
-        ])
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a JSON-only flashcard generator."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        raw = response.choices[0].message.content.strip()
         match = re.search(r"\[.*\]", raw, re.S)
         if match:
             raw = match.group(0)
@@ -222,10 +187,14 @@ def generate_quiz(topic):
     ]
     """
     try:
-        raw = ax_chat_completion([
-            {"role": "system", "content": "You are a JSON-only quiz generator."},
-            {"role": "user", "content": prompt}
-        ])
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a JSON-only quiz generator."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        raw = response.choices[0].message.content.strip()
         match = re.search(r"\[.*\]", raw, re.S)
         if match:
             raw = match.group(0)
@@ -243,10 +212,11 @@ def generate_quiz(topic):
 def generate_assignment(topic):
     prompt = f"Create 2 Korean learning assignments about '{topic}'."
     try:
-        raw = ax_chat_completion([
-            {"role": "user", "content": prompt}
-        ])
-        return raw
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
         st.error(f"⚠️ Assignment generation failed: {e}")
         return "Write 5 sentences using the word '학교'."
@@ -294,6 +264,7 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.markdown(f"<h2>{format_text('🤖 Chatbot')}</h2>", unsafe_allow_html=True)
 
+    # 🎨 Korean flag background
     st.markdown(
         """
         <style>
@@ -346,6 +317,7 @@ if mode == "🤖 Chatbot":
         unsafe_allow_html=True
     )
 
+    # --- Chat input box ---
     col1, col2 = st.columns([8,1])
     with col1:
         user_input = st.text_input("💬 Type your message...", key="chat_box", label_visibility="collapsed")
@@ -354,13 +326,15 @@ if mode == "🤖 Chatbot":
 
     if send and user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
-        raw = ax_chat_completion(
-            [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
         )
-        bot_reply = raw.strip()
+        bot_reply = response.choices[0].message.content
         st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
         st.rerun()
 
+    # --- Scrollable chat container ---
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for msg in st.session_state.chat_history:
         if msg["role"] == "user":
@@ -373,7 +347,8 @@ if mode == "🤖 Chatbot":
 # Mode: Flashcards (fixed visual + flipping)
 # ------------------------------
 elif mode == "📖 Flashcards":
-    st.markdown(f"<h2>{format_text('📖 Flashcards')}</h2>", unsafe_allow_html=True)
+    # heading (uses format_text to keep fonts consistent)
+    st.markdown(f"## {format_text('📖 Flashcards')}", unsafe_allow_html=True)
 
     topic = st.text_input("Enter a topic for flashcards:")
 
@@ -386,27 +361,36 @@ elif mode == "📖 Flashcards":
             f"### {format_text('Flashcards on: ' + st.session_state.flashcards_topic)}",
             unsafe_allow_html=True
         )
+
+        # CSS: grid + card + flip (checkbox hack). Insert once before cards.
         st.markdown(
             """
             <style>
+            /* grid layout */
             .flashcards-grid {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 16px;
                 align-items: flex-start;
             }
+
+            /* outer label acts as clickable card */
             .card {
                 display: inline-block;
                 perspective: 1000px;
                 cursor: pointer;
                 -webkit-tap-highlight-color: transparent;
             }
+
+            /* hide the checkbox */
             .card input[type="checkbox"] {
                 position: absolute;
                 opacity: 0;
                 pointer-events: none;
                 height: 0; width: 0;
             }
+
+            /* inner 3D wrapper */
             .card-inner {
                 width: 260px;
                 height: 150px;
@@ -417,9 +401,13 @@ elif mode == "📖 Flashcards":
                 box-shadow: 0 6px 18px rgba(0,0,0,0.12);
                 user-select: none;
             }
+
+            /* flip when checkbox checked */
             .card input[type="checkbox"]:checked + .card-inner {
                 transform: rotateY(180deg);
             }
+
+            /* front/back faces */
             .card-face {
                 position: absolute;
                 inset: 0;
@@ -436,25 +424,38 @@ elif mode == "📖 Flashcards":
                 text-align: center;
                 word-break: break-word;
             }
+
+            /* front style (dark blue) */
             .card-front {
-                background: #173a69;
+                background: #173a69; /* dark blue */
             }
+
+            /* back style (dark red) */
             .card-back {
-                background: #8B0000;
+                background: #8B0000; /* dark red */
                 transform: rotateY(180deg);
             }
+
+            /* make cards responsive on narrow screens */
             @media (max-width: 600px) {
                 .card-inner { width: 90vw; height: 140px; }
                 .card-face { font-size: 22px; }
             }
             </style>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
+
+        # Render the grid container
         st.markdown('<div class="flashcards-grid">', unsafe_allow_html=True)
+
+        # Each card: label > input + .card-inner > front/back
         for i, card in enumerate(st.session_state.flashcards, 1):
+            # use your existing format_text helper so Korean/English fonts are correct
             front_html = format_text(card.get("front", ""))
             back_html = format_text(card.get("back", ""))
+
+            # Insert the card HTML. Input is inside label; clicking toggles the checkbox
             card_html = f"""
                 <label class="card">
                     <input type="checkbox" />
@@ -465,14 +466,19 @@ elif mode == "📖 Flashcards":
                 </label>
             """
             st.markdown(card_html, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------
 # Mode: Quizzes
 # ------------------------------
 elif mode == "📝 Quizzes":
     st.markdown(f"<h2>{format_text('📚 Quizzes')}</h2>", unsafe_allow_html=True)
+
+    # ✅ Show label separately (keep custom font formatting)
     st.markdown(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
+
+    # ✅ Use key binding for session_state (avoids direct assignment issues)
     topic = st.text_input("", key="quiz_topic")
 
     if st.button("Generate Quiz") and topic:
@@ -480,11 +486,18 @@ elif mode == "📝 Quizzes":
         st.session_state.answers = {}
 
     if st.session_state.quizzes:
+        # ✅ Safely reference the topic already in session_state
         st.write(f"### Quiz on: {st.session_state['quiz_topic']}")
+
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
-            selected = st.radio(f"Choose an answer for Q{i}:", q["options"], key=f"quiz_{i}")
+            selected = st.radio(
+                f"Choose an answer for Q{i}:",
+                q["options"],
+                key=f"quiz_{i}"
+            )
             st.session_state.answers[i] = selected
+
         if st.button("Check Answers"):
             correct_count = 0
             for i, q in enumerate(st.session_state.quizzes, 1):
@@ -494,6 +507,8 @@ elif mode == "📝 Quizzes":
                     correct_count += 1
                 else:
                     st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
+
+            # ✅ Update progress safely
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
             st.session_state.progress["xp"] += correct_count * 10
@@ -504,13 +519,16 @@ elif mode == "📝 Quizzes":
 # ------------------------------
 elif mode == "✍️ Assignments":
     st.markdown(f"<h2>{format_text('✍️ Assignments')}</h2>", unsafe_allow_html=True)
+
     topic = st.text_input("Enter a topic for assignments:")
+
     if st.button("Generate Assignment") and topic:
         st.session_state.assignments = generate_assignment(topic)
         st.session_state.assignment_topic = topic
         st.session_state.progress["assignments_done"] += 1
         st.session_state.progress["xp"] += 20
         save_progress(st.session_state.progress)
+
     if st.session_state.assignments:
         st.write(f"### Assignments on: {st.session_state.assignment_topic}")
         st.info(st.session_state.assignments)
@@ -520,9 +538,13 @@ elif mode == "✍️ Assignments":
 # ------------------------------
 elif mode == "💖 Wellness":
     st.markdown(f"<h2>{format_text('💖 Wellness Check')}</h2>", unsafe_allow_html=True)
+
+    # Ask user for current feeling
     feeling = st.text_input("How are you feeling today?", key="wellness_feeling")
+
     if st.button("Get Motivation") and feeling:
         try:
+            # Prompt for generating new, fun motivational message with Korean quote
             prompt = f"""
             Generate a funny, uplifting, and emoji-rich motivational message for someone who is feeling '{feeling}'.
             Include a newly created Korean quote with English translation that matches the mood.
@@ -533,10 +555,16 @@ elif mode == "💖 Wellness":
               "english_translation": "English translation"
             }}
             """
-            raw = ax_chat_completion([
-                {"role": "system", "content": "You are a creative, playful, funny wellness coach. Use emojis freely."},
-                {"role": "user", "content": prompt}
-            ])
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a creative, playful, funny wellness coach. Use emojis freely."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            raw = response.choices[0].message.content.strip()
             match = re.search(r"\{.*\}", raw, re.S)
             if match:
                 data = json.loads(match.group(0))
@@ -547,108 +575,114 @@ elif mode == "💖 Wellness":
                 motivation = "💪 Keep going, you're awesome! 😎"
                 korean_quote = "천 리 길도 한 걸음부터다"
                 english_translation = "A journey of a thousand miles begins with a single step."
+                
+            # Store latest wellness message in session_state for persistence
             st.session_state.latest_wellness = {
                 "feeling": feeling,
                 "motivation": motivation,
                 "korean_quote": korean_quote,
                 "english_translation": english_translation
             }
+
         except Exception as e:
             st.error(f"⚠️ Failed to generate wellness content: {e}")
 
-    # Render wellness only if in Wellness mode
-    if "latest_wellness" in st.session_state:
-        card_html = f"""
-        <style>
-        .wellness-card {{
-            display: inline-block;
-            perspective: 1200px;
-            cursor: pointer;
-            margin: 15px 0;
-        }}
+# ------------------------------
+# Render wellness card if available
+# ------------------------------
+if "latest_wellness" in st.session_state:
+    card_html = f"""
+    <style>
+    .wellness-card {{
+        display: inline-block;
+        perspective: 1200px;
+        cursor: pointer;
+        margin: 15px 0;
+    }}
+    .wellness-card-inner {{
+        width: 400px;       /* Wider to fit content */
+        height: 700px;      /* Taller for motivation & quotes */
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        padding: 12px;
+    }}
+    .wellness-card input[type="checkbox"] {{
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        height: 0; width: 0;
+    }}
+    .wellness-card-front, .wellness-card-back {{
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }}
+    .wellness-card-front {{
+        background-color: #4C6EB1; /* Light deep blue */
+        color: white;
+        font-family: 'Calligraffitti', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        transition: box-shadow 0.3s ease-in-out;
+    }}
+    .wellness-card-front:hover {{
+        box-shadow: 0 0 25px 5px rgba(255,255,255,0.5);
+    }}
+    .wellness-card-back {{
+        background-color: #FF6F61; /* Light reddish pink */
+        color: white;
+        transform: rotateY(180deg);
+        font-size: 18px;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        overflow-y: auto; /* allow scrolling if content too big */
+        padding: 15px;
+    }}
+    .wellness-card-back span.korean-text {{
+        font-family: 'Nanum Myeongjo', serif;
+    }}
+    .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
+        transform: rotateY(180deg);
+    }}
+
+    @media (max-width: 600px) {{
         .wellness-card-inner {{
-            width: 400px;
-            height: 220px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-            padding: 12px;
+            width: 90vw;
+            height: auto;
         }}
-        .wellness-card input[type="checkbox"] {{
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            height: 0; width: 0;
-        }}
-        .wellness-card-front, .wellness-card-back {{
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }}
-        .wellness-card-front {{
-            background-color: #4C6EB1;
-            color: white;
-            font-family: 'Calligraffitti', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            transition: box-shadow 0.3s ease-in-out;
-        }}
-        .wellness-card-front:hover {{
-            box-shadow: 0 0 25px 5px rgba(255,255,255,0.5);
-        }}
-        .wellness-card-back {{
-            background-color: #FF6F61;
-            color: white;
-            transform: rotateY(180deg);
-            font-size: 18px;
-            font-weight: 600;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            overflow-y: auto;
-            padding: 15px;
-        }}
-        .wellness-card-back span.korean-text {{
-            font-family: 'Nanum Myeongjo', serif;
-        }}
-        .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
-            transform: rotateY(180deg);
-        }}
-        @media (max-width: 600px) {{
-            .wellness-card-inner {{
-                width: 90vw;
-                height: auto;
-            }}
-        }}
-        </style>
+    }}
+    </style>
 
-        <label class="wellness-card">
-            <input type="checkbox" />
-            <div class="wellness-card-inner">
-                <div class="wellness-card-front">
-                    {format_text("💖 Click to see your motivation!")}
-                </div>
-                <div class="wellness-card-back">
-                    <b>Feeling:</b> {format_text(st.session_state.latest_wellness['feeling'])}<br><br>
-                    <b>Motivation:</b> {format_text(st.session_state.latest_wellness['motivation'])}<br><br>
-                    <b>Korean Quote:</b> <span class="korean-text">{st.session_state.latest_wellness['korean_quote']}</span><br>
-                    <i>{format_text(st.session_state.latest_wellness['english_translation'])}</i>
-                </div>
+    <label class="wellness-card">
+        <input type="checkbox" />
+        <div class="wellness-card-inner">
+            <div class="wellness-card-front">
+                {format_text("💖 Click to see your motivation!")}
             </div>
-        </label>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
-
+            <div class="wellness-card-back">
+                <b>Feeling:</b> {format_text(st.session_state.latest_wellness['feeling'])}<br><br>
+                <b>Motivation:</b> {format_text(st.session_state.latest_wellness['motivation'])}<br><br>
+                <b>Korean Quote:</b> <span class="korean-text">{st.session_state.latest_wellness['korean_quote']}</span><br>
+                <i>{format_text(st.session_state.latest_wellness['english_translation'])}</i>
+            </div>
+        </div>
+    </label>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
+            
 # ------------------------------
 # Mode: Dashboard
 # ------------------------------
@@ -672,17 +706,20 @@ elif mode == "📊 Dashboard":
         save_progress(st.session_state.progress)
         st.success("Progress has been reset!")
 
+    # ✅ Keep only one XP Progress section
     st.subheader("🔥 XP Progress")
     progress_to_next = xp % 100
     st.write(f"Level {level} — {xp} XP total")
     st.progress(progress_to_next / 100)
 
+    # Key Metrics
     st.subheader("📈 Stats Overview")
     col1, col2, col3 = st.columns(3)
     col1.metric("Quizzes Taken", st.session_state.progress.get("quizzes_taken", 0))
     col2.metric("Correct Answers", st.session_state.progress.get("correct_answers", 0))
     col3.metric("Assignments Done", st.session_state.progress.get("assignments_done", 0))
 
+    # Simple Chart
     import pandas as pd
     import matplotlib.pyplot as plt
     xp_history = pd.DataFrame({"XP": [10, 30, 60, xp], "Stage": ["Day 1", "Day 2", "Day 3", "Now"]})
