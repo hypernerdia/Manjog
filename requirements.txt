@@ -1,3 +1,7 @@
 streamlit
-pip install transformers torch accelerate
-matplotlib
+openai
+transformers
+torch
+accelerate
+rich
+sentencepiece
