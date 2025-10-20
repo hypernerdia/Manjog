@@ -601,7 +601,7 @@ elif mode == "💖 Wellness":
         }}
         .wellness-card-inner {{
             width: 400px;       /* Wider to fit content */
-            height: 700px;      /* Taller for motivation & quotes */
+            height: 600px;      /* Taller for motivation & quotes */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
