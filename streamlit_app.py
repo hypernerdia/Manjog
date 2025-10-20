@@ -542,23 +542,19 @@ elif mode == "💖 Wellness":
     # Ask user for current feeling
     feeling = st.text_input("How are you feeling today?", key="wellness_feeling")
 
+    # Button to generate motivation and quote
     if st.button("Get Motivation") and feeling:
-        try:
-            # Generate a motivational message dynamically (replace with your generator call)
-            motivation = generate_dynamic_motivation(feeling)
-            korean_quote, english_translation = generate_dynamic_korean_quote()
+        motivation = generate_dynamic_motivation(feeling)
+        korean_quote, english_translation = generate_dynamic_korean_quote()
 
-            st.session_state.latest_wellness = {
-                "feeling": feeling,
-                "motivation": motivation,
-                "korean_quote": korean_quote,
-                "english_translation": english_translation
-            }
+        st.session_state.latest_wellness = {
+            "feeling": feeling,
+            "motivation": motivation,
+            "korean_quote": korean_quote,
+            "english_translation": english_translation
+        }
 
-        except Exception as e:
-            st.error(f"⚠️ Failed to generate wellness content: {e}")
-
-    # ✅ Only render card when on this page
+    # Show card if content exists
     if "latest_wellness" in st.session_state:
         card_html = f"""
         <style>
@@ -606,11 +602,11 @@ elif mode == "💖 Wellness":
             font-size: 22px;
             font-weight: 700;
             transition: box-shadow 0.3s ease-in-out;
-       }}
-       .wellness-card-front:hover {{
+        }}
+        .wellness-card-front:hover {{
             box-shadow: 0 0 25px 5px rgba(255,255,255,0.5);
-       }}
-       .wellness-card-back {{
+        }}
+        .wellness-card-back {{
             background-color: #FF6F61; /* Light reddish pink */
             color: white;
             transform: rotateY(180deg);
@@ -619,13 +615,13 @@ elif mode == "💖 Wellness":
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             overflow-y: auto; /* allow scrolling if content too big */
             padding: 15px;
-       }}
-       .wellness-card-back span.korean-text {{
+        }}
+        .wellness-card-back span.korean-text {{
             font-family: 'Nanum Myeongjo', serif;
-       }}
-       .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
+        }}
+        .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
             transform: rotateY(180deg);
-       }}
+        }}
 
         @media (max-width: 600px) {{
             .wellness-card-inner {{
@@ -651,7 +647,7 @@ elif mode == "💖 Wellness":
         </label>
         """
         st.markdown(card_html, unsafe_allow_html=True)
-            
+         
             
             
 # ------------------------------
