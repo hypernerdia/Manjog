@@ -560,59 +560,78 @@ elif mode == "💖 Wellness":
 
     # ✅ Only render card when on this page
     if "latest_wellness" in st.session_state:
-        wellness = st.session_state.latest_wellness
-
         card_html = f"""
         <style>
         .wellness-card {{
-            width: 400px;
-            height: 700px;
+            display: inline-block;
             perspective: 1200px;
-            margin: 30px auto;
+            cursor: pointer;
+            margin: 15px 0;
         }}
         .wellness-card-inner {{
+            width: 400px;       /* Wider to fit content */
+            height: 700px;      /* Taller for motivation & quotes */
             position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.8s;
             transform-style: preserve-3d;
-            cursor: pointer;
+            transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            padding: 12px;
         }}
-        .wellness-card input {{
-            display: none;
-        }}
-        .wellness-card input:checked + .wellness-card-inner {{
-            transform: rotateY(180deg);
+        .wellness-card input[type="checkbox"] {{
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            height: 0; width: 0;
         }}
         .wellness-card-front, .wellness-card-back {{
             position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 15px;
-            padding: 25px;
-            backface-visibility: hidden;
+            inset: 0;
             display: flex;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
-            font-family: 'Noto Sans KR', 'Poppins', sans-serif;
-            font-size: 18px;
+            align-items: center;
+            justify-content: center;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }}
         .wellness-card-front {{
-            background-color: #2E4A78; /* light deep blue */
-            color: #fff;
-        }}
-        .wellness-card-back {{
-            background-color: #F8B6B6; /* light reddish pink */
-            color: #333;
+            background-color: #4C6EB1; /* Light deep blue */
+            color: white;
+            font-family: 'Calligraffitti', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            transition: box-shadow 0.3s ease-in-out;
+       }}
+       .wellness-card-front:hover {{
+            box-shadow: 0 0 25px 5px rgba(255,255,255,0.5);
+       }}
+       .wellness-card-back {{
+            background-color: #FF6F61; /* Light reddish pink */
+            color: white;
             transform: rotateY(180deg);
-            overflow-y: auto;
-        }}
-        .korean-text {{
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            overflow-y: auto; /* allow scrolling if content too big */
+            padding: 15px;
+       }}
+       .wellness-card-back span.korean-text {{
+            font-family: 'Nanum Myeongjo', serif;
+       }}
+       .wellness-card input[type="checkbox"]:checked + .wellness-card-inner {{
+            transform: rotateY(180deg);
+       }}
+
+        @media (max-width: 600px) {{
+            .wellness-card-inner {{
+                width: 90vw;
+                height: auto;
+            }}
         }}
         </style>
 
@@ -620,19 +639,20 @@ elif mode == "💖 Wellness":
             <input type="checkbox" />
             <div class="wellness-card-inner">
                 <div class="wellness-card-front">
-                    💖 Click to open your motivation!
+                    {format_text("💖 Click to see your motivation!")}
                 </div>
                 <div class="wellness-card-back">
-                    <b>Feeling:</b> {format_text(wellness['feeling'])}<br><br>
-                    <b>Motivation:</b> {format_text(wellness['motivation'])}<br><br>
-                    <b>Korean Quote:</b> <span class="korean-text">{wellness['korean_quote']}</span><br>
-                    <i>{format_text(wellness['english_translation'])}</i>
+                    <b>Feeling:</b> {format_text(st.session_state.latest_wellness['feeling'])}<br><br>
+                    <b>Motivation:</b> {format_text(st.session_state.latest_wellness['motivation'])}<br><br>
+                    <b>Korean Quote:</b> <span class="korean-text">{st.session_state.latest_wellness['korean_quote']}</span><br>
+                    <i>{format_text(st.session_state.latest_wellness['english_translation'])}</i>
                 </div>
             </div>
         </label>
         """
         st.markdown(card_html, unsafe_allow_html=True)
-
+            
+            
             
 # ------------------------------
 # Mode: Dashboard
