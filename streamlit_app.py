@@ -693,7 +693,7 @@ elif mode == "🇰🇷 Korean Inspiration":
         """Generate a new Korean inspirational story automatically."""
         try:
             prompt = """
-             Generate a detailed, emotionally rich story about a Korean person (historical or modern) who inspires others. The story should include their struggles, values, turning points, and achievements — in both Korean and English. Keep it warm, poetic, and motivational, around 65 words long.
+             Generate a detailed, emotionally rich story about a Korean person (historical or modern) who inspires others. The story should include their struggles, values, turning points, and achievements — in both Korean and English. Keep it warm, poetic, and motivational, around 100 words long.
             Include:
             - name_korean
             - name_english
