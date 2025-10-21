@@ -693,24 +693,29 @@ elif mode == "🇰🇷 Korean Inspiration":
         """Generate a new Korean inspirational story automatically."""
         try:
             prompt = """
-            Generate a short, deeply inspiring story about a Korean person — historical or modern.
-            The story should include:
-            - Their Korean name and brief background
-            - A short inspiring summary (in both Korean and English)
-            - A moral or lesson from their life
-            Respond ONLY in JSON format like this:
+            Generate a short, emotionally inspiring story about a Korean person (historical or modern).
+            Include:
+            - name_korean
+            - name_english
+            - korean_story
+            - english_story
+            - moral_korean
+            - moral_english
+            Respond ONLY in JSON format like:
             {
-              "name": "Full Korean name",
-              "korean_story": "Short Korean version",
-              "english_story": "English version",
-              "moral": "Lesson in one short line"
+              "name_korean": "유관순",
+              "name_english": "Yu Gwan-sun",
+              "korean_story": "그녀는 조국의 독립을 위해 싸웠다.",
+              "english_story": "She fought for her country's independence.",
+              "moral_korean": "희생은 자유의 뿌리다.",
+              "moral_english": "Sacrifice is the root of freedom."
             }
             """
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a warm Korean storyteller who writes brief, heartfelt, motivating stories."},
+                    {"role": "system", "content": "You are a warm Korean storyteller who writes short, bilingual, motivating stories."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -720,71 +725,68 @@ elif mode == "🇰🇷 Korean Inspiration":
             if match:
                 data = json.loads(match.group(0))
                 return {
-                    "name": data.get("name", "Unknown Hero"),
+                    "name_korean": data.get("name_korean", "이름 없음"),
+                    "name_english": data.get("name_english", "Unknown Hero"),
                     "korean_story": data.get("korean_story", "용기와 희망의 한국 이야기입니다."),
                     "english_story": data.get("english_story", "This is a story of courage and hope from Korea."),
-                    "moral": data.get("moral", "Bravery inspires generations.")
+                    "moral_korean": data.get("moral_korean", "용기는 모든 것을 바꾼다."),
+                    "moral_english": data.get("moral_english", "Courage changes everything.")
                 }
             else:
-                return {
-                    "name": "Unknown Hero",
-                    "korean_story": "용기와 희망의 한국 이야기입니다.",
-                    "english_story": "This is a story of courage and hope from Korea.",
-                    "moral": "Bravery inspires generations."
-                }
+                return None
 
         except Exception as e:
             st.error(f"⚠️ Failed to generate story: {e}")
             return None
 
-    # Auto-generate or regenerate story
+    # Generate once or on button click
     if "latest_story" not in st.session_state:
         st.session_state.latest_story = generate_korean_story()
 
     if st.button("✨ New Story"):
         st.session_state.latest_story = generate_korean_story()
 
-# ------------------------------
-# Render Korean Inspiration Card if available
-# ------------------------------
-if "latest_story" in st.session_state:
-    story_html = f"""
-    <style>
-    .story-card {{
-        background: linear-gradient(145deg, #6A85B6, #BAC8E0);
-        border-radius: 15px;
-        padding: 25px;
-        margin-top: 15px;
-        color: #fff;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        font-family: 'Nanum Myeongjo', serif;
-        width: 80%;
-    }}
-    .story-card h3 {{
-        font-family: 'Do Hyeon', sans-serif;
-        font-size: 28px;
-        margin-bottom: 10px;
-    }}
-    .story-card p {{
-        font-size: 18px;
-        line-height: 1.6;
-    }}
-    .story-card .moral {{
-        font-style: italic;
-        margin-top: 10px;
-        font-family: 'Calligraffitti', cursive;
-        color: #FFE8E8;
-    }}
-    </style>
+    # Display story (only in this mode)
+    if "latest_story" in st.session_state and st.session_state.latest_story:
+        story_html = f"""
+        <style>
+        .story-card {{
+            background: linear-gradient(145deg, #7047F5, #BAC8E0);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 15px;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            font-family: 'Nanum Myeongjo', serif;
+            width: 80%;
+        }}
+        .story-card h3 {{
+            font-family: 'Do Hyeon', sans-serif;
+            font-size: 26px;
+            margin-bottom: 10px;
+            color: #FFF0F0;
+        }}
+        .story-card p {{
+            font-size: 18px;
+            line-height: 1.6;
+        }}
+        .story-card .moral {{
+            font-style: italic;
+            margin-top: 12px;
+            font-family: 'Calligraffitti', cursive;
+            color: #FFE8E8;
+        }}
+        </style>
 
-    <div class="story-card">
-        <h3>{st.session_state.latest_story['name']}</h3>
-        <p><b>Korean:</b> {st.session_state.latest_story['korean_story']}</p>
-        <p><b>English:</b> {st.session_state.latest_story['english_story']}</p>
-        <p class="moral">🌸 Moral: {st.session_state.latest_story['moral']}</p>
-    </div>
-    """
-    st.markdown(story_html, unsafe_allow_html=True)
+        <div class="story-card">
+            <h3>{st.session_state.latest_story['name_korean']} ({st.session_state.latest_story['name_english']})</h3>
+            <p><b>Korean Story:</b> {st.session_state.latest_story['korean_story']}</p>
+            <p><b>English Story:</b> {st.session_state.latest_story['english_story']}</p>
+            <p class="moral">🌸 Moral: {st.session_state.latest_story['moral_korean']}<br>
+            <i>({st.session_state.latest_story['moral_english']})</i></p>
+        </div>
+        """
+        st.markdown(story_html, unsafe_allow_html=True)
             
 # ------------------------------
 # Mode: Dashboard
