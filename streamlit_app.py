@@ -255,7 +255,7 @@ st.set_page_config(page_title="Korean Learning Chatbot", page_icon="🇰🇷", l
 
 st.sidebar.title("📚 Korean Learning Chatbot")
 mode = st.sidebar.radio("Choose a mode:", [
-    "🤖 Chatbot", "📖 Flashcards", "📝 Quizzes", "✍️ Assignments", "💖 Wellness", "🇰🇷 Korean Inspiration", "📊 Dashboard"
+    "🤖 Chatbot", "📖 Flashcards", "📝 Quizzes", "✍️ Assignments", "💖 Wellness", "🎤 Korean Inspiration", "📊 Dashboard"
 ])
 
 # ------------------------------
@@ -684,9 +684,9 @@ elif mode == "💖 Wellness":
         st.markdown(card_html, unsafe_allow_html=True)
             
 # ------------------------------
-# Mode: Korean Inspiration
+# Mode: 🎤 Korean Inspiration
 # ------------------------------
-elif mode == "🇰🇷 Korean Inspiration":
+elif mode == "🎤 Korean Inspiration":
     st.markdown(f"<h2>{format_text('🇰🇷 Inspiring Korean Stories')}</h2>", unsafe_allow_html=True)
 
     def generate_korean_story():
