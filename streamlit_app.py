@@ -175,7 +175,7 @@ def generate_flashcards(topic):
 
 def generate_quiz(topic):
     prompt = f"""
-    Create 3 Korean multiple-choice quizzes about "{topic}".
+    Create 10 Korean multiple-choice quizzes in ENGLISH ONLY about "{topic}".
     Respond ONLY with valid JSON, nothing else.
     Format:
     [
