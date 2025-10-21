@@ -1,3 +1,5 @@
 streamlit
 openai
 transformers
+matplotlib
+pandas
