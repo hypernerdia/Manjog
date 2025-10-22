@@ -546,7 +546,7 @@ elif mode == "💖 Wellness":
         try:
             # Prompt for generating new, fun motivational message with Korean quote
             prompt = f"""
-            Generate a funny, uplifting, and emoji-rich motivational message for someone who is feeling '{feeling}'.
+            Generate a funny, uplifting, and emoji-rich motivational message about 45 words long for someone who is feeling '{feeling}'.
             Include a newly created Korean quote with English translation that matches the mood.
             Respond ONLY in JSON format like this:
             {{
