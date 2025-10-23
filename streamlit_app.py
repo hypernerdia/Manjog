@@ -362,6 +362,13 @@ elif mode == "📖 Flashcards":
             unsafe_allow_html=True
         )
 
+        # --- ➊ Helper: Trim text to 5 words max ---
+        def trim_to_five_words(text):
+            words = text.split()
+            if len(words) > 5:
+                return " ".join(words[:5]) + "..."
+            return text
+
         # CSS: grid + card + flip (checkbox hack). Insert once before cards.
         st.markdown(
             """
