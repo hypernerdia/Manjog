@@ -598,10 +598,12 @@ elif mode == "💖 Wellness":
             perspective: 1000px;
             cursor: pointer;
             margin: 15px 0;
+            width: 100%;
         }}
         .wellness-card-inner {{
-            width: 250px;       /* Wider to fit content */
-            height: 400px;      /* Taller for motivation & quotes */
+            width: 100%;      /* Wider to fit content */
+            height: auto;      /* ✅ Auto height for all screens */
+            min-height: 450px;      /* Taller for motivation & quotes */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
