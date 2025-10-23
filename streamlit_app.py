@@ -603,7 +603,7 @@ elif mode == "💖 Wellness":
         .wellness-card-inner {{
             width: 100%;      /* Wider to fit content */
             height: auto;      /* ✅ Auto height for all screens */
-            min-height: 450px;      /* Taller for motivation & quotes */
+            min-height: 550px;      /* Taller for motivation & quotes */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
