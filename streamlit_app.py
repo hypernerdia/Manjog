@@ -546,7 +546,7 @@ elif mode == "💖 Wellness":
         try:
             # Prompt for generating new, fun motivational message with Korean quote
             prompt = f"""
-            Generate a funny, uplifting, and emoji-rich motivational message about 45 words long for someone who is feeling '{feeling}'. Also add only 3 emojis in the whole paragraph.
+            Generate a funny, uplifting, and emoji-rich motivational message about 35 words long for someone who is feeling '{feeling}'. Also add only 3 emojis in the whole paragraph.
             Include a newly created Korean quote with English translation that matches the mood.
             Respond ONLY in JSON format like this:
             {{
@@ -595,13 +595,13 @@ elif mode == "💖 Wellness":
         <style>
         .wellness-card {{
             display: inline-block;
-            perspective: 1200px;
+            perspective: 1000px;
             cursor: pointer;
             margin: 15px 0;
         }}
         .wellness-card-inner {{
             width: 250px;       /* Wider to fit content */
-            height: 450px;      /* Taller for motivation & quotes */
+            height: 400px;      /* Taller for motivation & quotes */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(.25,.8,.25,1);
