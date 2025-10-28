@@ -34,7 +34,7 @@ st.markdown(
 st.markdown(
     """
     <style>
-    /* Set background for the whole app */
+    /* Set background for the whole app expect 'Chatbot 🤖' section*/
     .stApp {
         background-color: #E6ECF8; /* Light navy blue */
     }
@@ -275,7 +275,7 @@ if mode == "🤖 Chatbot":
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: url('https://github.com/hypernerdia/Manjog/blob/55e0993de7c4ca7ad75b48960fed7f57112a1853/assets/chatbot_bg.png') no-repeat center center fixed;
+            background: url('https://raw.githubusercontent.com/<hypernerdia>/<manjog>/main/assets/chatbot_bg.jpg') no-repeat center center fixed;
             background-size: cover;
             opacity: 0.4; /* adjust visibility */
             z-index: -1;
