@@ -264,20 +264,20 @@ mode = st.sidebar.radio("Choose a mode:", [
 if mode == "🤖 Chatbot":
     st.markdown(f"<h2>{format_text('🤖 Chatbot')}</h2>", unsafe_allow_html=True)
 
-    # 🎨 Korean flag background
+    # 🎨 Custom background from assets folder
     st.markdown(
         """
         <style>
-        .stApp { background-color: white; }
-        .flag-overlay {
+        .stApp {
+            background-color: white;
+        }
+        .chatbot-bg {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-image: url('https://lh3.googleusercontent.com/gg-dl/AJfQ9KTdPmW50RZdroUTFHXooYhr5VKSMioWsOO7VrMQb4O6yeYvBsoEVl2ZI0OFv21WIwyH40qiMfT0UfLm6oDNHcKBE2E_vof-P39PurGiwApoik9LLaSfs0Xf2Rg_fOxesDVfl7ojyRVuyo3V6-oBleTGW_6lsut4iP3Qp09NA6sYD0unBg=s1024');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            opacity: 0.5;
+            background: url('assets/chatbot_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.4; /* adjust visibility */
             z-index: -1;
         }
         .chat-container {
