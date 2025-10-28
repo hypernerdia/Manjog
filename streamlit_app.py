@@ -277,7 +277,6 @@ if mode == "🤖 Chatbot":
             width: 100%; height: 100%;
             background: url('https://raw.githubusercontent.com/<hypernerdia>/<manjog>/main/assets/chatbot_bg.jpg') no-repeat center center fixed;
             background-size: cover;
-            opacity: 0.4; /* adjust visibility */
             z-index: -1;
         }
         .chat-container {
