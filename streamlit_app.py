@@ -481,26 +481,72 @@ elif mode == "📖 Flashcards":
 elif mode == "📝 Quizzes":
     st.markdown(f"<h2>{format_text('📚 Quizzes')}</h2>", unsafe_allow_html=True)
 
-    # ✅ Show label separately (keep custom font formatting)
-    st.markdown(format_text("Enter a topic for quizzes:"), unsafe_allow_html=True)
+    # Step 1: Select quiz type
+    quiz_type = st.radio(
+        "Select quiz type:",
+        ["Vocabulary", "Grammar", "General"],
+        key="quiz_type"
+    )
 
-    # ✅ Use key binding for session_state (avoids direct assignment issues)
-    topic = st.text_input("", key="quiz_topic")
+    # Step 2: Handle quiz type logic
+    if quiz_type == "Vocabulary":
+        st.markdown(format_text("Enter a topic for vocabulary quiz:"), unsafe_allow_html=True)
+        vocab_topic = st.text_input("", key="vocab_topic")
 
-    if st.button("Generate Quiz") and topic:
-        st.session_state.quizzes = generate_quiz(topic)
-        st.session_state.answers = {}
+        if st.button("Generate Vocabulary Quiz") and vocab_topic:
+            # Generate quiz that gives English words and asks for Korean meaning
+            st.session_state.quizzes = generate_quiz(
+                f"Generate a Korean vocabulary quiz on the topic '{vocab_topic}'. "
+                f"Ask questions by giving English words and provide multiple Korean translations as options. "
+                f"Always generate in English and make sure one option is correct."
+            )
+            st.session_state.answers = {}
 
-    if st.session_state.quizzes:
-        # ✅ Safely reference the topic already in session_state
-        st.write(f"### Quiz on: {st.session_state['quiz_topic']}")
+    elif quiz_type == "Grammar":
+        st.markdown(format_text("Select a Korean grammar topic:"), unsafe_allow_html=True)
+        grammar_topic = st.selectbox(
+            "Choose grammar focus:",
+            [
+                "Sentence formation (Subject-Object-Verb)",
+                "Particles and markers (이/가, 을/를, 은/는)",
+                "Honorifics and politeness levels",
+                "Verb conjugations",
+                "Connectives (-고, -지만, -서)",
+                "Tenses and aspect"
+            ],
+            key="grammar_topic"
+        )
+
+        if st.button("Generate Grammar Quiz") and grammar_topic:
+            st.session_state.quizzes = generate_quiz(
+                f"Create a Korean grammar quiz about '{grammar_topic}'. "
+                f"Ask conceptual questions in English first (e.g., what is the subject-object-verb order), "
+                f"then give example sentences in English and ask which Korean option is correctly structured. "
+                f"Make all questions and explanations in English."
+            )
+            st.session_state.answers = {}
+
+    elif quiz_type == "General":
+        st.markdown(format_text("Enter a topic for general quiz:"), unsafe_allow_html=True)
+        general_topic = st.text_input("", key="general_topic")
+
+        if st.button("Generate General Quiz") and general_topic:
+            st.session_state.quizzes = generate_quiz(
+                f"Generate a general knowledge quiz about '{general_topic}' related to Korean culture, language, or society. "
+                f"Keep all questions in English."
+            )
+            st.session_state.answers = {}
+
+    # Step 3: Render the generated quiz (common for all types)
+    if st.session_state.get("quizzes"):
+        st.markdown(f"### Quiz Type: {quiz_type}")
 
         for i, q in enumerate(st.session_state.quizzes, 1):
             st.write(f"**Q{i}. {q['question']}**")
             selected = st.radio(
                 f"Choose an answer for Q{i}:",
                 q["options"],
-                key=f"quiz_{i}"
+                key=f"quiz_{i}_{quiz_type}"
             )
             st.session_state.answers[i] = selected
 
@@ -512,9 +558,9 @@ elif mode == "📝 Quizzes":
                     st.success(f"Q{i}: ✅ Correct!")
                     correct_count += 1
                 else:
-                    st.error(f"Q{i}: ❌ Wrong! Correct: {q['answer']}")
+                    st.error(f"Q{i}: ❌ Wrong! Correct answer: {q['answer']}")
 
-            # ✅ Update progress safely
+            # Update XP or progress safely
             st.session_state.progress["quizzes_taken"] += 1
             st.session_state.progress["correct_answers"] += correct_count
             st.session_state.progress["xp"] += correct_count * 10
