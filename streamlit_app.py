@@ -266,19 +266,20 @@ if mode == "🤖 Chatbot":
 
     # 🎨 Custom background from assets folder
     st.markdown(
-        """
+        f"""
         <style>
-        .stApp {
-            background-color: white;
-        }
-        .chatbot-bg {
+        .stApp {{ background-color: white; }}
+        .flag-overlay {{
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: url('https://raw.githubusercontent.com/<hypernerdia>/<manjog>/main/assets/chatbot_bg.jpg') no-repeat center center fixed;
+            background-image: url('https://static.vecteezy.com/system/resources/previews/027/304/479/original/cute-kawaii-korean-cat-holding-a-flag-vector.jpg');
             background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.45;
             z-index: -1;
-        }
+        }}
         .chat-container {
             max-height: 500px;
             overflow-y: auto;
