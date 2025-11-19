@@ -56,17 +56,18 @@ def format_text(text):
 st.markdown(
     """
     <style>
-    .chatbot-section {
-        background-image: url('https://static.vecteezy.com/system/resources/previews/027/304/479/original/cute-kawaii-korean-cat-holding-a-flag-vector.jpg');
-        background-size: cover;
-        background-position: center;
-        padding: 20px;
-        border-radius: 15px;
+    /* Sidebar radio button styling */
+    .stRadio div[role="radiogroup"] label {
+        display: block;
+        background-color: #ffcccc; /* light red */
+        color: black;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 10px; /* rounded corners */
+        cursor: pointer;
+        border: 2px solid transparent; /* default border */
+        font-family: 'Calligraffitti', sans-serif;
     }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
     /* Selected option */
     .stRadio div[role="radiogroup"] label[data-baseweb="radio"]:has(input:checked) {
@@ -265,20 +266,19 @@ if mode == "🤖 Chatbot":
 
     # 🎨 Custom background from assets folder
     st.markdown(
-        f"""
+        """
         <style>
-        .stApp {{ background-color: white; }}
-        .flag-overlay {{
+        .stApp {
+            background-color: white;
+        }
+        .chatbot-bg {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-image: url('https://static.vecteezy.com/system/resources/previews/027/304/479/original/cute-kawaii-korean-cat-holding-a-flag-vector.jpg');
+            background: url('https://raw.githubusercontent.com/<hypernerdia>/<manjog>/main/assets/chatbot_bg.jpg') no-repeat center center fixed;
             background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            opacity: 0.45;
             z-index: -1;
-        }}
+        }
         .chat-container {
             max-height: 500px;
             overflow-y: auto;
