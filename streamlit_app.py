@@ -149,7 +149,7 @@ def save_progress(progress):
 # ------------------------------
 def generate_flashcards(topic):
     prompt = f"""
-    Create 3 Korean flashcards about "{topic}". Either side of each flashcard should have no more than 5 words, be it in English language or Korean language. The front side of each flashcard must be in Korean, while the backside of each flashcard must be in English.
+    Create 5 Korean flashcards about "{topic}". Either side of each flashcard should have no more than 5 words, be it in English language or Korean language. The front side of each flashcard must be in Korean, while the backside of each flashcard must be in English.
     Respond ONLY with valid JSON, nothing else.
     Format:
     [
