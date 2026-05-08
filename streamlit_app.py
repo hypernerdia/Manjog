@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import re
 import os
-from openai import OpenAI
+from groq import Groq
 
 # Must be first Streamlit call
 st.set_page_config(page_title="한국어 배우기 · Korean Learning", page_icon="🌸", layout="wide")
@@ -451,7 +451,7 @@ def format_text(text):
 # ------------------------------
 # OpenAI client
 # ------------------------------
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # ------------------------------
 # Progress persistence
@@ -507,7 +507,7 @@ def generate_quiz(topic):
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama3-8b-8192",
             messages=[
                 {"role": "system", "content": "You are a JSON-only quiz generator."},
                 {"role": "user", "content": prompt}
@@ -525,7 +525,7 @@ def generate_assignment(topic):
     prompt = f"Create 2 Korean learning assignments about '{topic}'."
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama3-8b-8192",
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -602,7 +602,7 @@ if mode == "🤖 Chatbot":
     if send and user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama3-8b-8192",
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_history]
         )
         bot_reply = response.choices[0].message.content
@@ -768,7 +768,7 @@ elif mode == "💖 Wellness":
             {{"motivation":"...","korean_quote":"...","english_translation":"..."}}
             """
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="llama3-8b-8192",
                 messages=[
                     {"role": "system", "content": "Creative, playful wellness coach."},
                     {"role": "user", "content": prompt}
@@ -825,7 +825,7 @@ elif mode == "🎤 Korean Inspiration":
             Respond ONLY in JSON.
             """
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="llama3-8b-8192",
                 messages=[
                     {"role": "system", "content": "Warm Korean bilingual storyteller."},
                     {"role": "user", "content": prompt}
