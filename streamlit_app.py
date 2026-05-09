@@ -297,13 +297,14 @@ h2 { border-bottom: 2px solid var(--gold); padding-bottom: 6px; }
     border: 3px solid var(--gold);
 }
 .wellness-card-back {
-    background: linear-gradient(145deg, #f5e6d0, #ecdcc8);
-    color: var(--ink);
+    background: linear-gradient(145deg, #1a3a2a, #2e5c42);
+    color: #F5EDD8;
     transform: rotateY(180deg);
     font-size: 16px;
     font-family: 'Times New Roman', Times, serif;
     border: 3px solid var(--gold);
     overflow-y: auto;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.25);
 }
 
 /* ── Story card ── */
@@ -455,7 +456,7 @@ def get_client():
     return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 client = get_client()
-MODEL = "llama-3.1-8b-instant"
+MODEL  = "llama3-8b-8192"
 
 
 # ══════════════════════════════════════════════════
@@ -669,15 +670,24 @@ if "progress" not in st.session_state:
 # SIDEBAR
 # ══════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown(f'<div class="blossom-deco">{blossom_svg()}</div>', unsafe_allow_html=True)
     st.markdown(
-        "<h2 style='text-align:center;letter-spacing:3px;"
-        "font-family:Black Han Sans,sans-serif;'>한국어 배우기</h2>"
-        "<p style='text-align:center;font-size:13px;opacity:0.8;margin-top:-12px;"
-        "font-family:Times New Roman,Times,serif;'>Korean Learning</p>",
+        f'<div style="text-align:center;padding:12px 0 10px;">{blossom_svg()}</div>',
         unsafe_allow_html=True
     )
-    st.markdown("---")
+    st.markdown(
+        "<div style='text-align:center;padding:4px 0 6px;'>"
+        "<h2 style='margin:0;letter-spacing:3px;font-family:"Nanum Myeongjo",serif;"
+        "color:#F5D5A0;font-size:22px;'>한국어 배우기</h2>"
+        "<p style='margin:4px 0 0;font-size:13px;opacity:0.8;"
+        "font-family:Times New Roman,Times,serif;color:#EDE0CC;'>Korean Learning</p>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        "<div style='height:2px;background:linear-gradient(90deg,transparent,#B8973A,transparent);"
+        "margin:10px 16px 14px;'></div>",
+        unsafe_allow_html=True
+    )
     mode = st.radio("", [
         "🤖 Chatbot",
         "📖 Flashcards",
@@ -948,17 +958,17 @@ elif mode == "💖 Wellness":
                         font-family:Nanum Myeongjo,serif;'>마음을 담아</span>
                 </div>
                 <div class="wellness-card-back">
-                    <b style='color:#8B1A1A;'>Feeling:</b><br>
-                    <span style='font-family:Times New Roman,Times,serif;'>{w['feeling']}</span>
+                    <b style='color:#F5D5A0;font-size:15px;'>Feeling:</b><br>
+                    <span style='font-family:Times New Roman,Times,serif;color:#F5EDD8;'>{w['feeling']}</span>
                     <br><br>
-                    <b style='color:#8B1A1A;'>Motivation:</b><br>
-                    <span style='font-family:Times New Roman,Times,serif;'>{w['motivation']}</span>
+                    <b style='color:#F5D5A0;font-size:15px;'>Motivation:</b><br>
+                    <span style='font-family:Times New Roman,Times,serif;color:#F5EDD8;'>{w['motivation']}</span>
                     <br><br>
-                    <b style='color:#8B1A1A;'>Korean Quote:</b><br>
-                    <span style='font-family:Nanum Myeongjo,serif;font-size:18px;color:#3B5E8C;'>
+                    <b style='color:#F5D5A0;font-size:15px;'>Korean Quote:</b><br>
+                    <span style='font-family:Nanum Myeongjo,serif;font-size:20px;color:#E8B4B8;'>
                         {w['korean_quote']}
                     </span><br>
-                    <i style='color:#6E5E4A;font-family:Times New Roman,Times,serif;'>
+                    <i style='color:#c8dfc8;font-family:Times New Roman,Times,serif;font-size:14px;'>
                         {w['english_translation']}
                     </i>
                 </div>
