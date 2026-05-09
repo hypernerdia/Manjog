@@ -676,7 +676,7 @@ with st.sidebar:
     )
     st.markdown(
         "<div style='text-align:center;padding:4px 0 6px;'>"
-        "<h2 style='margin:0;letter-spacing:3px;font-family:"Nanum Myeongjo",serif;"
+        "<h2 style='margin:0;letter-spacing:3px;font-family:Nanum Myeongjo,serif;"
         "color:#F5D5A0;font-size:22px;'>한국어 배우기</h2>"
         "<p style='margin:4px 0 0;font-size:13px;opacity:0.8;"
         "font-family:Times New Roman,Times,serif;color:#EDE0CC;'>Korean Learning</p>"
