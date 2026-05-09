@@ -455,7 +455,7 @@ def get_client():
     return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 client = get_client()
-MODEL  = "llama-3.1-8b-8192-instant"
+MODEL = "llama-3.1-8b-instant"
 
 
 # ══════════════════════════════════════════════════
