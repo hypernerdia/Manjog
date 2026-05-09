@@ -456,7 +456,7 @@ def get_client():
     return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 client = get_client()
-MODEL  = "llama-3.1-8b-instant"
+MODEL  = "llama3-8b-8192"
 
 
 # ══════════════════════════════════════════════════
@@ -481,12 +481,12 @@ def save_progress(p):
 # ══════════════════════════════════════════════════
 # AI HELPERS
 # ══════════════════════════════════════════════════
-def groq_chat(messages, system=None):
+def groq_chat(messages, system=None, max_tokens=1500):
     msgs = []
     if system:
         msgs.append({"role": "system", "content": system})
     msgs.extend(messages)
-    resp = client.chat.completions.create(model=MODEL, messages=msgs, max_tokens=1500)
+    resp = client.chat.completions.create(model=MODEL, messages=msgs, max_tokens=max_tokens)
     return resp.choices[0].message.content.strip()
 
 def clean_raw(raw):
@@ -616,34 +616,93 @@ def generate_wellness(feeling):
         "english_translation": "A journey of a thousand miles begins with a single step."
     }
 
+# Fallback stories so the section never shows empty
+_FALLBACK_STORIES = [
+    {
+        "name_korean": "유관순",
+        "name_english": "Yu Gwan-sun",
+        "korean_story": "유관순은 1902년 충청남도에서 태어났습니다. 일제강점기 시절, 그녀는 조국의 독립을 위해 싸웠습니다. 1919년 3.1 운동 당시 고향에서 만세운동을 이끌다 체포되어 서대문 형무소에 갇혔습니다. 모진 고문에도 굴하지 않고 옥중에서도 대한독립만세를 외쳤으며, 18세의 나이로 순국하였습니다. 그녀의 용기와 희생은 오늘날에도 많은 이들에게 감동을 줍니다.",
+        "english_story": "Yu Gwan-sun was born in 1902 in South Chungcheong Province. During the Japanese occupation, she fought bravely for Korean independence. During the March 1st Movement of 1919, she led a protest in her hometown and was arrested. Even under brutal torture in Seodaemun Prison, she never stopped crying out for independence. She died at just 18 years old. Her courage and sacrifice continue to inspire generations of Koreans.",
+        "moral_korean": "진정한 용기는 두려움이 없는 것이 아니라, 두려움보다 더 중요한 것을 위해 싸우는 것이다.",
+        "moral_english": "True courage is not the absence of fear, but fighting for something more important than fear."
+    },
+    {
+        "name_korean": "세종대왕",
+        "name_english": "King Sejong the Great",
+        "korean_story": "세종대왕은 조선의 네 번째 왕으로, 1397년에 태어났습니다. 그는 백성들이 글을 읽고 쓸 수 있도록 1443년에 한글을 창제하였습니다. 당시 한자는 배우기 어려워 일반 백성들은 문자를 사용하지 못했습니다. 세종은 과학, 음악, 농업 등 다양한 분야에서도 큰 업적을 남겼으며, 측우기와 같은 과학 기구를 발명하게 했습니다. 그의 업적은 오늘날까지 한국 문화의 근간이 되고 있습니다.",
+        "english_story": "King Sejong was the fourth king of the Joseon Dynasty, born in 1397. Seeing that ordinary people could not read because Chinese characters were too difficult, he created Hangeul in 1443 — a simple, scientific alphabet designed for everyone. He also made great achievements in science, music, and agriculture, commissioning inventions like the rain gauge. His legacy remains the foundation of Korean culture and identity to this day.",
+        "moral_korean": "지식은 모든 사람의 것이어야 한다. 배움의 문은 누구에게나 열려 있어야 한다.",
+        "moral_english": "Knowledge belongs to everyone. The door to learning must be open to all."
+    },
+    {
+        "name_korean": "이순신",
+        "name_english": "Admiral Yi Sun-sin",
+        "korean_story": "이순신 장군은 1545년에 태어나 조선 최고의 해군 장수가 되었습니다. 임진왜란 당시 그는 거북선을 이용해 일본 수군을 연이어 격파하였습니다. 부하들의 신뢰를 받으며 단 한 번도 패전하지 않은 그는 명량 해전에서 단 12척의 배로 133척의 적선을 물리치는 기적을 이루었습니다. 1598년 노량 해전에서 전사하였지만, 그의 나라 사랑과 불굴의 의지는 영원히 기억됩니다.",
+        "english_story": "Admiral Yi Sun-sin was born in 1545 and became Korea's greatest naval commander. During the Japanese invasions, he used the famous Turtle Ship to defeat enemy fleets repeatedly. Beloved by his soldiers and never defeated in battle, he achieved the miracle of the Battle of Myeongnyang — defeating 133 enemy ships with only 12. He died in battle in 1598, but his patriotism and indomitable spirit are remembered forever.",
+        "moral_korean": "한 번도 포기하지 않는 사람은 절대 패배하지 않는다.",
+        "moral_english": "A person who never gives up can never truly be defeated."
+    }
+]
+
 def generate_story():
+    import random
+    # Pick a random person to avoid always getting Sejong
+    subjects = [
+        ("유관순", "Yu Gwan-sun", "a young female independence activist during Japanese occupation"),
+        ("안창호", "Ahn Chang-ho", "an educator and independence movement leader"),
+        ("김구", "Kim Gu", "a prominent independence activist and politician"),
+        ("신사임당", "Shin Saimdang", "a renowned artist, poet and scholar of the Joseon era"),
+        ("장영실", "Jang Yeong-sil", "a low-born inventor who rose to greatness under King Sejong"),
+        ("허준", "Heo Jun", "a royal physician who wrote the Dongui Bogam medical encyclopedia"),
+    ]
+    name_ko, name_en, desc = random.choice(subjects)
+
     prompt = (
-        "Write about an inspiring Korean person (historical or modern). "
-        "Describe their struggles, values, and achievements. "
-        "Write the story in both Korean and English (about 80 words each). "
-        "IMPORTANT: Write Korean text as real Korean characters, NOT as escape codes like \\uXXXX. "
-        "Output ONLY valid JSON, no extra text, no markdown:\n"
-        '{"name_korean":"세종대왕","name_english":"King Sejong",'
-        '"korean_story":"<Korean text here>","english_story":"<English text here>",'
-        '"moral_korean":"<Korean moral>","moral_english":"<English moral>"}'
+        f"Write an inspiring story about the Korean historical figure {name_en} ({name_ko}), "
+        f"who was {desc}. "
+        f"Include their struggles, key turning point, and greatest achievement. "
+        f"Keep each section to 3-4 sentences. "
+        f"Use this EXACT format with these EXACT field names, nothing else:\n"
+        f"NAME_KOREAN: {name_ko}\n"
+        f"NAME_ENGLISH: {name_en}\n"
+        f"KOREAN_STORY: <write 3-4 sentences in Korean here>\n"
+        f"ENGLISH_STORY: <write 3-4 sentences in English here>\n"
+        f"MORAL_KOREAN: <one sentence moral in Korean>\n"
+        f"MORAL_ENGLISH: <one sentence moral in English>"
     )
     try:
         raw = groq_chat(
             [{"role": "user", "content": prompt}],
             system=(
                 "You are a bilingual Korean storyteller. "
-                "Output ONLY valid JSON. "
-                "Write Korean characters as actual Korean Unicode text, never as \\uXXXX escape sequences. "
-                "No markdown fences, no commentary, just the JSON object."
-            )
+                "Follow the format exactly. "
+                "Write Korean as real Korean characters. "
+                "Do not use JSON. Do not add extra commentary."
+            ),
+            max_tokens=800
         )
-        data = extract_json_obj(raw)
-        if data:
-            return data
-        st.error("⚠️ Could not parse story response. Please click New Story to try again.")
+        # Parse the plain-text labelled format — much more reliable than JSON
+        def extract_field(label, text):
+            pattern = rf"{label}:\s*(.+?)(?=\n[A-Z_]+:|$)"
+            m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+            return m.group(1).strip() if m else ""
+
+        result = {
+            "name_korean":   extract_field("NAME_KOREAN",   raw),
+            "name_english":  extract_field("NAME_ENGLISH",  raw),
+            "korean_story":  extract_field("KOREAN_STORY",  raw),
+            "english_story": extract_field("ENGLISH_STORY", raw),
+            "moral_korean":  extract_field("MORAL_KOREAN",  raw),
+            "moral_english": extract_field("MORAL_ENGLISH", raw),
+        }
+        # If we got at least english_story, it worked
+        if result["english_story"]:
+            return result
     except Exception as e:
-        st.error(f"⚠️ Story error: {e}")
-    return None
+        st.error(f"⚠️ Story generation error: {e}")
+
+    # Return a random fallback story rather than None
+    return random.choice(_FALLBACK_STORIES)
 
 
 # ══════════════════════════════════════════════════
