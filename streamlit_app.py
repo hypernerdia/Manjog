@@ -420,7 +420,7 @@ except Exception:
     st.error("⚠️ GROQ_API_KEY not found in secrets. Please add it to your Streamlit secrets.")
     st.stop()
 
-MODEL = "llama3-8b-8192"
+MODEL = "llama-3.1-8b-instant"
 
 
 def chat(system, user, max_tokens=1024):
